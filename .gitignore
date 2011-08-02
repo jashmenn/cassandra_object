@@ -6,3 +6,5 @@ vendor/gems/*
 !vendor/gems/cache/
 .bundle
 vendor/jars/*
+Gemfile.lock
+.#*
