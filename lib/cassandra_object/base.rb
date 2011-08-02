@@ -2,6 +2,7 @@ require 'cassandra'
 require 'set'
 require 'cassandra_object/attributes'
 require 'cassandra_object/dirty'
+require 'cassandra_object/persistence/common'
 require 'cassandra_object/persistence/cassandra'
 require 'cassandra_object/callbacks'
 require 'cassandra_object/validation'
@@ -66,6 +67,7 @@ module CassandraObject
     include Callbacks
     include Identity
     include Attributes
+    include Persistence::Common
     include Persistence::Cassandra
     include Indexes
     include Dirty
