@@ -44,15 +44,18 @@ module CassandraObject
         end
 
         def create(attributes)
-          # returning new(attributes) do |object|
-          #   object.save
-          # end
+          returning new(attributes) do |object|
+            object.save
+          end
         end
 
         def write(key, attributes, schema_version)
-          # returning(key) do |key|
-          #   connection.insert(column_family, key.to_s, encode_columns_hash(attributes, schema_version), :consistency => write_consistency_for_thrift)
-          # end
+          pp [:write, key, attributes, schema_version]
+          returning(key) do |key|
+            # todo, key shouldn't be cast to a string here
+            pp [column_family, key.to_s, attributes, schema_version]
+            # connection.insert(column_family, key.to_s, encode_columns_hash(attributes, schema_version), :consistency => write_consistency_for_thrift)
+          end
         end
 
         def instantiate(key, attributes)

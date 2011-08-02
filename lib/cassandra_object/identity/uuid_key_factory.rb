@@ -8,7 +8,7 @@ module CassandraObject
           include Key
 
           def initialize
-            @uuid = java.lang.UUID.randomUUID
+            @uuid = java.util.UUID.randomUUID
           end
 
           def to_param

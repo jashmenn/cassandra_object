@@ -74,6 +74,15 @@ This gem has backwards compatibility with active support version 2.3.x,  this is
 
 Only if you're looking to help out with the development, there are a bunch of rough edges right now.
 
-## Why do you use a superclass and not a module.
+## Reasons for hector_object
 
-Because.
+- uses Hector client, which is widely used and very robust
+  (connection pools, logging, etc)
+- uses java thrift bindings under the hood, so you get (should) good performance
+- better serialization - we protects your types and don't convert
+  things to strings that shouldn't be
+- better java interop - if you write a java object to cassandra,
+  you can read it with no problem
+- better byte level processing (byte-buffers, etc)
+
+

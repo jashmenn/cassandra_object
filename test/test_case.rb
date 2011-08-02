@@ -1,7 +1,8 @@
 
 class CassandraObjectTestCase < ActiveSupport::TestCase
   def teardown
-    CassandraObject::Base.connection.clear_keyspace!
+    # dangerous, this depends on the keyspace 
+    # CassandraObject::Base.connection.clear_keyspace!
   end
 
   def mock_invoice
