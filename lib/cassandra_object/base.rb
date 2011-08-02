@@ -3,13 +3,7 @@ require 'set'
 require 'cassandra_object/attributes'
 require 'cassandra_object/dirty'
 require 'cassandra_object/persistence'
-
-if CassandraObject.old_active_support
-  require 'cassandra_object/legacy_callbacks'
-else
-  require 'cassandra_object/callbacks'
-end
-
+require 'cassandra_object/callbacks'
 require 'cassandra_object/validation'
 require 'cassandra_object/identity'
 require 'cassandra_object/indexes'
@@ -47,12 +41,7 @@ module CassandraObject
       end
     end
     extend Naming
-    
-    if CassandraObject.old_active_support
-      def self.lookup_ancestors
-        super.select { |x| x.model_name.present? }
-      end
-    end
+   end
     
     extend ActiveModel::Naming
     
