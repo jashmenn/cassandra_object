@@ -14,6 +14,10 @@ if ENV['CASSANDRA_REQUIRED']
 end
 
 puts "Connecting..."
+
+if defined?(JRUBY_VERSION)
+  CassandraObject::Base.connection_class = Hector
+end
 CassandraObject::Base.establish_connection "CassandraObject"
 
 if defined?($pid)

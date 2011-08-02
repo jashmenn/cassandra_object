@@ -13,15 +13,14 @@ end
 
 if defined?(JRUBY_VERSION)
   require 'java'
-  jars_dir = File.dirname(__FILE__) + "/../vendor/jars"
-  $LOAD_PATH << jars_dir
-
-  Dir.entries(jars_dir).sort.each do |entry|
-    if entry =~ /.jar$/
-      puts entry
-      require entry
-    end
-  end
+  # jars_dir = File.dirname(__FILE__) + "/../vendor/jars"
+  # $LOAD_PATH << jars_dir
+  # Dir.entries(jars_dir).sort.each do |entry|
+  #   if entry =~ /.jar$/
+  #     puts entry
+  #     require entry
+  #   end
+  # end
 end
 
 require 'cassandra_object/base'

@@ -1,6 +1,11 @@
 require 'rubygems'
 require 'bundler'
 
+if defined?(JRUBY_VERSION)
+gem 'hector.rb'
+require 'hector'
+end
+
 Bundler.setup
 
 require 'cassandra_object'

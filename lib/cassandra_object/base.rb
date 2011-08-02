@@ -1,9 +1,18 @@
+if defined?(JRUBY_VERSION)
+
+require 'hector'
+else
 require 'cassandra'
+end
 require 'set'
 require 'cassandra_object/attributes'
 require 'cassandra_object/dirty'
 require 'cassandra_object/persistence/common'
+if defined?(JRUBY_VERSION)
+require 'cassandra_object/persistence/hector'
+else
 require 'cassandra_object/persistence/cassandra'
+end
 require 'cassandra_object/callbacks'
 require 'cassandra_object/validation'
 require 'cassandra_object/identity'
@@ -41,9 +50,8 @@ module CassandraObject
         @column_family || name.pluralize
       end
     end
+
     extend Naming
-   end
-    
     extend ActiveModel::Naming
     
     module ConfigurationDumper
@@ -68,7 +76,12 @@ module CassandraObject
     include Identity
     include Attributes
     include Persistence::Common
-    include Persistence::Cassandra
+
+    if defined?(JRUBY_VERSION)
+      include Persistence::Hector
+    else
+      include Persistence::Cassandra
+    end
     include Indexes
     include Dirty
 
