@@ -1,5 +1,6 @@
 module CassandraObject
   module Persistence
+    module Cassandra
     extend ActiveSupport::Concern
     included do
       class_inheritable_writer :write_consistency
@@ -188,6 +189,7 @@ module CassandraObject
         self.class.get(self.key)
       end
       
+      end
     end
   end
 end

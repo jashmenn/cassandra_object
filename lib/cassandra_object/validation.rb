@@ -43,7 +43,6 @@ module CassandraObject
       def save!
         save || RecordInvalidError.raise_error(self)
       end
-
     end
   end
 end
