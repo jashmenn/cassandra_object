@@ -76,6 +76,8 @@ module CassandraObject
         def instantiate(key, attributes)
           # remove any attributes we don't know about. we would do this earlier, but we want to make such
           #  attributes available to migrations
+          pp [:model_attribute_keys, model_attributes.keys, attributes]
+
           attributes.delete_if{|k,_| !model_attributes.keys.include?(k)}
           returning allocate do |object|
             object.instance_variable_set("@schema_version", attributes.delete('schema_version'))
@@ -96,11 +98,13 @@ module CassandraObject
         end
 
         def reading_persistence_attribute_options
-          {}
+          {:n_serializer => :string, :v_serializer => :long, :s_serializer => :string}
         end
 
         def decode_columns_hash(attributes)
+          pp [:decode_columns_hash, attributes]
           attributes.inject(Hash.new) do |memo, (column_name, value)|
+            pp [:decode, column_name, value]
             memo[column_name.to_s] = model_attributes[column_name].converter.decode(value)
             memo
           end

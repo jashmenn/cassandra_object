@@ -8,7 +8,12 @@ module CassandraObject
           include Key
 
           def initialize(uuid=nil)
-            @uuid = uuid || java.util.UUID.randomUUID
+            @uuid = case uuid
+                    when String then java.util.UUID.fromString(uuid)
+                    when java.util.UUID then uuid
+                    else java.util.UUID.randomUUID
+                    end
+            @_uuidstr = @uuid.toString # for pp debug purposes only
           end
 
           def to_param
