@@ -32,6 +32,7 @@ module CassandraObject
       end
       
       def parse_key(string)
+        pp [:parse_key, string]
         @key_factory.parse(string)
       end
     end

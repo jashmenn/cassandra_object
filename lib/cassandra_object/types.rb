@@ -129,12 +129,32 @@ module CassandraObject
   if defined?(JRUBY_VERSION)
     module ToJavaType
       def encode(thing)
+        case thing # todo
+          when Integer then thing
+          when Float   then thing
+          when String  then thing
+          when Date    then thing
+          when Time    then thing
+          when CassandraObject::Identity::UUIDKeyFactory::UUID then thing.uuid
+          when ActiveSupport::TimeWithZone then thing
+          else
+          thing
+        end
         thing
       end
       module_function :encode
 
       def decode(thing)
-        thing
+        case thing # todo
+          when Integer then thing
+          when Float   then thing
+          when String  then thing
+          when Date    then thing
+          when Time    then thing
+          when ActiveSupport::TimeWithZone then thing
+          else
+          thing
+        end
       end
       module_function :decode
     end

@@ -7,8 +7,8 @@ module CassandraObject
         class UUID
           include Key
 
-          def initialize
-            @uuid = java.util.UUID.randomUUID
+          def initialize(uuid=nil)
+            @uuid = uuid || java.util.UUID.randomUUID
           end
 
           def to_param
@@ -19,6 +19,9 @@ module CassandraObject
             # FIXME - this should probably write the raw bytes 
             # but it's very hard to debug without this for now.
             @uuid.toString
+          end
+          def uuid
+            @uuid
           end
         end
       else

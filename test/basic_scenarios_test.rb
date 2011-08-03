@@ -6,7 +6,8 @@ class BasicScenariosTest < CassandraObjectTestCase
     @ks_name = java.util.UUID.randomUUID.to_s.gsub("-","")
     self.connection.add_keyspace({:name => @ks_name, :strategy => :local, 
                                   :replication => 1, :column_families => [{:name => "Customers"}]}) 
-    self.connection.keyspace = @ks_name
+    connection.keyspace = @ks_name
+    Customer.connection = self.connection # ew but thats how class_inheritable_accessor works
 
     @customer = Customer.create :first_name    => "Michael",
                                 :last_name     => "Koziarski",
@@ -17,8 +18,8 @@ class BasicScenariosTest < CassandraObjectTestCase
 
   def teardown
     super
-    self.connection.drop_keyspace(@ks_name)
-    self.connection.disconnect
+    connection.drop_keyspace(@ks_name)
+    connection.disconnect
   end
 
   test "a new object can be retrieved by key" do
