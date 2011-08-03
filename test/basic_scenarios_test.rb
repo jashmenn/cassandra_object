@@ -3,12 +3,22 @@ require 'test_helper'
 class BasicScenariosTest < CassandraObjectTestCase
   def setup
     super
+    @ks_name = java.util.UUID.randomUUID.to_s.gsub("-","")
+    self.connection.add_keyspace({:name => @ks_name, :strategy => :local, 
+                                  :replication => 1, :column_families => [{:name => "Customers"}]}) 
+    self.connection.keyspace = @ks_name
+
     @customer = Customer.create :first_name    => "Michael",
                                 :last_name     => "Koziarski",
                                 :date_of_birth => Date.parse("1980/08/15")
     @customer_key = @customer.key.to_s                          
-
     assert @customer.valid?
+  end
+
+  def teardown
+    super
+    self.connection.drop_keyspace(@ks_name)
+    self.connection.disconnect
   end
 
   test "a new object can be retrieved by key" do

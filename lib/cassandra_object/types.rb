@@ -125,4 +125,18 @@ module CassandraObject
     end
     module_function :decode
   end
+
+  if defined?(JRUBY_VERSION)
+    module ToJavaType
+      def encode(thing)
+        thing
+      end
+      module_function :encode
+
+      def decode(thing)
+        thing
+      end
+      module_function :decode
+    end
+  end
 end

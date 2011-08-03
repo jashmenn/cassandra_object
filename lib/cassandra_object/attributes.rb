@@ -1,12 +1,13 @@
 module CassandraObject
   class Attribute
 
-    attr_reader :name, :converter, :expected_type
-    def initialize(name, owner_class, converter, expected_type, options)
+    attr_reader :name, :converter, :expected_type, :serializer
+    def initialize(name, owner_class, converter, expected_type, serializer, options)
       @name          = name.to_s
       @owner_class   = owner_class
       @converter     = converter
       @expected_type = expected_type
+      @serializer    = serializer
       @options       = options
     end
 
@@ -29,10 +30,11 @@ module CassandraObject
         
         unless type_mapping = attribute_types[options[:type]]
           type_mapping =  { :expected_type => options[:type], 
-                            :converter => options[:converter] }.with_indifferent_access
+                            :converter => options[:converter],
+                            :serializer => options[:serializer]}.with_indifferent_access
         end
         
-        new_attr = Attribute.new(name, self, type_mapping[:converter], type_mapping[:expected_type], options)
+        new_attr = Attribute.new(name, self, type_mapping[:converter], type_mapping[:expected_type], type_mapping[:serializer], options)
         write_inheritable_hash(:model_attributes, {name => new_attr}.with_indifferent_access)
         new_attr.define_methods!
       end
@@ -43,8 +45,8 @@ module CassandraObject
         super(model_attributes.keys)
       end
       
-      def register_attribute_type(name, expected_type, converter)
-        attribute_types[name] = { :expected_type => expected_type, :converter => converter }.with_indifferent_access
+      def register_attribute_type(name, expected_type, converter, serializer=nil)
+        attribute_types[name] = { :expected_type => expected_type, :converter => converter, :serializer => serializer }.with_indifferent_access
       end
     end
 

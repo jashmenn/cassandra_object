@@ -1,5 +1,4 @@
 if defined?(JRUBY_VERSION)
-
 require 'hector'
 else
 require 'cassandra'
@@ -9,6 +8,7 @@ require 'cassandra_object/attributes'
 require 'cassandra_object/dirty'
 require 'cassandra_object/persistence/common'
 if defined?(JRUBY_VERSION)
+require 'hector'
 require 'cassandra_object/persistence/hector'
 else
 require 'cassandra_object/persistence/cassandra'

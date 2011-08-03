@@ -50,10 +50,17 @@ module CassandraObject
         end
 
         def write(key, attributes, schema_version)
-          pp [:write, key, attributes, schema_version]
           returning(key) do |key|
             # todo, key shouldn't be cast to a string here
-            pp [column_family, key.to_s, attributes, schema_version]
+            pp [:write, column_family, key.to_s, attributes, schema_version,
+               encode_columns_hash(attributes, schema_version)]
+            # @opts = {:n_serializer => :string, :v_serializer => :string, :s_serializer => :string}
+            # @client.put_row(@cf, "row-key", {"k" => "v"})
+            # there are two types of serialization going on here 1) converters from the ruby side 2) serialization in the hector side
+            # maybe we need to add a serializer to the attributes, probably a good idea
+            # also we need to figure out supercolumns
+
+            # connection.put_row()
             # connection.insert(column_family, key.to_s, encode_columns_hash(attributes, schema_version), :consistency => write_consistency_for_thrift)
           end
         end
