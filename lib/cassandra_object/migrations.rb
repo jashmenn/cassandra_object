@@ -42,11 +42,18 @@ module CassandraObject
       
       def instantiate(key, attributes)
         version = attributes.delete('schema_version')
+        #version = attributes['schema_version']
+        version = Java::MePrettyprintCassandraSerializers::StringSerializer.get.fromBytes(version)
+
+        pp [:version, version, current_schema_version]
+
         original_attributes = attributes.dup
-        if version == current_schema_version
+        if version.to_s == current_schema_version.to_s
+          pp ["versions_match", key, attributes]
+          attributes['schema_version'] = version
           return super(key, attributes)
         end
-        
+
         versions_to_migrate = ((version.to_i + 1)..current_schema_version)
         
         migrations_to_run = versions_to_migrate.map do |v|

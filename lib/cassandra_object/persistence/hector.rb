@@ -9,7 +9,7 @@ module CassandraObject
 
         def get(key, options = {})
           # multi_get([key], options).values.first
-          multi_get([key], options)
+          multi_get([key], options).values.first
         end
 
         def multi_get(keys, options = {})
@@ -77,10 +77,11 @@ module CassandraObject
           # remove any attributes we don't know about. we would do this earlier, but we want to make such
           #  attributes available to migrations
           pp [:model_attribute_keys, model_attributes.keys, attributes]
+          schema_version = attributes.delete('schema_version').to_i
 
           attributes.delete_if{|k,_| !model_attributes.keys.include?(k)}
           returning allocate do |object|
-            object.instance_variable_set("@schema_version", attributes.delete('schema_version'))
+            object.instance_variable_set("@schema_version", schema_version)
             object.instance_variable_set("@key", parse_key(key))
             object.instance_variable_set("@attributes", decode_columns_hash(attributes).with_indifferent_access)
           end
@@ -98,14 +99,18 @@ module CassandraObject
         end
 
         def reading_persistence_attribute_options
-          {:n_serializer => :string, :v_serializer => :long, :s_serializer => :string}
+          {:n_serializer => :string, :v_serializer => :bytes, :s_serializer => :string}
         end
 
         def decode_columns_hash(attributes)
           pp [:decode_columns_hash, attributes]
           attributes.inject(Hash.new) do |memo, (column_name, value)|
+            # memo[column_name.to_s] = model_attributes[column_name].converter.decode(value)
             pp [:decode, column_name, value]
-            memo[column_name.to_s] = model_attributes[column_name].converter.decode(value)
+            pp [model_attributes[column_name].converter, model_attributes[column_name].serializer]
+            deserialized = model_attributes[column_name].serializer.fromBytes(value)
+            converted    = model_attributes[column_name].converter.decode(deserialized)
+            memo[column_name.to_s] = converted
             memo
           end
         end

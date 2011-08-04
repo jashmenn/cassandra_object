@@ -11,7 +11,9 @@ class BasicScenariosTest < CassandraObjectTestCase
 
     @customer = Customer.create :first_name    => "Michael",
                                 :last_name     => "Koziarski",
-                                :date_of_birth => Date.parse("1980/08/15")
+                                :date_of_birth => "1980/08/15"
+
+                                #:date_of_birth => Date.parse("1980/08/15")
     @customer_key = @customer.key.to_s                          
     assert @customer.valid?
   end
@@ -28,7 +30,8 @@ class BasicScenariosTest < CassandraObjectTestCase
     
     assert_equal "Michael", other_customer.first_name
     assert_equal "Koziarski", other_customer.last_name
-    assert_equal Date.parse("1980-08-15"), other_customer.date_of_birth
+    assert_equal "1980/08/15", other_customer.date_of_birth
+    #assert_equal Date.parse("1980-08-15"), other_customer.date_of_birth
   end
 
   # test "get on a non-existent key returns nil" do

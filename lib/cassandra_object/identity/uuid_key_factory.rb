@@ -28,6 +28,10 @@ module CassandraObject
           def uuid
             @uuid
           end
+
+          def ==(other)
+            self.to_s == other.to_s
+          end
         end
       else
         begin
