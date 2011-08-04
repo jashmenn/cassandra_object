@@ -66,7 +66,7 @@ module CassandraObject
             key = key.to_s # TODO - use the key serializer!
             ech = encode_columns_hash(attributes, schema_version)
             pao = persistence_attribute_options(attributes, schema_version)
-            pp [:write, column_family, key, ech, pao]
+            # pp [:write, column_family, key, ech, pao]
 
             connection.put_row(column_family, key, ech, pao)
             # connection.insert(column_family, key.to_s, encode_columns_hash(attributes, schema_version), :consistency => write_consistency_for_thrift)
@@ -76,7 +76,7 @@ module CassandraObject
         def instantiate(key, attributes)
           # remove any attributes we don't know about. we would do this earlier, but we want to make such
           #  attributes available to migrations
-          pp [:model_attribute_keys, model_attributes.keys, attributes]
+          # pp [:model_attribute_keys, model_attributes.keys, attributes]
           schema_version = attributes.delete('schema_version').to_i
 
           attributes.delete_if{|k,_| !model_attributes.keys.include?(k)}
@@ -103,11 +103,11 @@ module CassandraObject
         end
 
         def decode_columns_hash(attributes)
-          pp [:decode_columns_hash, attributes]
+          # pp [:decode_columns_hash, attributes]
           attributes.inject(Hash.new) do |memo, (column_name, value)|
             # memo[column_name.to_s] = model_attributes[column_name].converter.decode(value)
-            pp [:decode, column_name, value]
-            pp [model_attributes[column_name].converter, model_attributes[column_name].serializer]
+            # pp [:decode, column_name, value]
+            # pp [model_attributes[column_name].converter, model_attributes[column_name].serializer]
             deserialized = model_attributes[column_name].serializer.fromBytes(value)
             converted    = model_attributes[column_name].converter.decode(deserialized)
             memo[column_name.to_s] = converted

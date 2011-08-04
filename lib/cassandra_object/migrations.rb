@@ -45,11 +45,11 @@ module CassandraObject
         #version = attributes['schema_version']
         version = Java::MePrettyprintCassandraSerializers::StringSerializer.get.fromBytes(version)
 
-        pp [:version, version, current_schema_version]
+        # pp [:version, version, current_schema_version]
 
         original_attributes = attributes.dup
         if version.to_s == current_schema_version.to_s
-          pp ["versions_match", key, attributes]
+          # pp ["versions_match", key, attributes]
           attributes['schema_version'] = version
           return super(key, attributes)
         end

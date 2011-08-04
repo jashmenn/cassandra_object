@@ -3,6 +3,7 @@ require 'test_helper'
 class BasicScenariosTest < CassandraObjectTestCase
   def setup
     super
+    CassandraObject::Base.establish_connection nil
     @ks_name = java.util.UUID.randomUUID.to_s.gsub("-","")
     self.connection.add_keyspace({:name => @ks_name, :strategy => :local, 
                                   :replication => 1, :column_families => [{:name => "Customers"}]}) 
@@ -34,14 +35,14 @@ class BasicScenariosTest < CassandraObjectTestCase
     #assert_equal Date.parse("1980-08-15"), other_customer.date_of_birth
   end
 
-  # test "get on a non-existent key returns nil" do
-  #   assert_nil Customer.get("THIS IS NOT A KEY")
-  # end
+  test "get on a non-existent key returns nil" do
+    assert_nil Customer.get("THIS IS NOT A KEY")
+  end
 
   
-  # test "a new object is included in Model.all" do
-  #   assert Customer.all.include?(@customer)
-  # end
+  test "a new object is included in Model.all" do
+     assert Customer.all.include?(@customer)
+  end
 
   # test "date_of_birth is a date" do
   #   assert @customer.date_of_birth.is_a?(Date)
