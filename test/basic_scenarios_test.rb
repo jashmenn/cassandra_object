@@ -39,9 +39,8 @@ class BasicScenariosTest < CassandraObjectTestCase
     assert_nil Customer.get("THIS IS NOT A KEY")
   end
 
-  
   test "a new object is included in Model.all" do
-     assert Customer.all.include?(@customer)
+    assert Customer.all.include?(@customer)
   end
 
   # test "date_of_birth is a date" do

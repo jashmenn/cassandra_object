@@ -1,6 +1,23 @@
 require 'test_helper'
 
 class IndexTest < CassandraObjectTestCase
+
+  setup do
+    unless self.connection
+      puts "Establishing Connection"
+      self.column_families = [{:name => "Customers"},
+                              {:name => "Invoices"},
+                              {:name => "InvoicesByNumber"}]
+      self.establish_connection
+      Customer.connection = self.connection # wtf
+      Invoice.connection = self.connection # wtf
+    end
+  end
+
+  teardown do
+    # break_connection
+  end
+
   context "A non-unique index" do
     setup do
       @last_name = ActiveSupport::SecureRandom.hex(5)
@@ -24,19 +41,20 @@ class IndexTest < CassandraObjectTestCase
     end
   end
 
+  # TODO why is this corrupt?
   context "A corrupt non-unique index" do
-    setup do
-      @last_name = ActiveSupport::SecureRandom.hex(5)
-      @koz = Customer.create :first_name=>"Michael", :last_name=>@last_name, :date_of_birth=>28.years.ago.to_date
-      connection.insert("CustomersByLastName", @last_name, {"last_name"=>{SimpleUUID::UUID.new=>"ROFLSKATES"}})
-      @wife = Customer.create :first_name=>"Anika", :last_name=>@last_name, :date_of_birth=>30.years.ago.to_date
-    end
-    
-    should "Return both values and clean up" do
-      assert_ordered [@wife.key, @koz.key], Customer.find_all_by_last_name(@last_name).map(&:key)
-      assert_ordered [@wife.key, @koz.key], connection.get("CustomersByLastName", @last_name, "last_name", :reversed=>true).values
-    end
-    
+   setup do
+     @last_name = ActiveSupport::SecureRandom.hex(5)
+     @koz = Customer.create :first_name=>"Michael", :last_name=>@last_name, :date_of_birth=>28.years.ago.to_date
+     connection.insert("CustomersByLastName", @last_name, {"last_name"=>{SimpleUUID::UUID.new=>"ROFLSKATES"}})
+     @wife = Customer.create :first_name=>"Anika", :last_name=>@last_name, :date_of_birth=>30.years.ago.to_date
+   end
+   
+   should "Return both values and clean up" do
+     assert_ordered [@wife.key, @koz.key], Customer.find_all_by_last_name(@last_name).map(&:key)
+     assert_ordered [@wife.key, @koz.key], connection.get("CustomersByLastName", @last_name, "last_name", :reversed=>true).values
+   end
+   
   end
   
   context "A unique index" do
@@ -55,6 +73,7 @@ class IndexTest < CassandraObjectTestCase
     end
   end
   
+  # I don't know how this is corrupt just yet. TODO uncomment
   context " A corrupt unique index" do
     setup do
       connection.insert("InvoicesByNumber", '15' , {"key"=>"HAHAHAHA"})
@@ -64,6 +83,5 @@ class IndexTest < CassandraObjectTestCase
       assert_nil Invoice.find_by_number(15)
       assert connection.get("InvoicesByNumber", "15", "number").blank?
     end
-    
-  end
+  # end
 end

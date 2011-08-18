@@ -1,5 +1,8 @@
 
 class CassandraObjectTestCase < ActiveSupport::TestCase
+  attr_accessor :column_families
+  attr_accessor :ks_name
+
   def teardown
     # dangerous, this depends on the keyspace 
     # CassandraObject::Base.connection.clear_keyspace!
@@ -25,5 +28,27 @@ class CassandraObjectTestCase < ActiveSupport::TestCase
       expected_object_order.index(e)
     end
     assert_equal expected_object_order, actual_order, "Collection was ordered incorrectly: #{actual_indexes.inspect}"
+  end
+
+  # e.g.
+  # setup do
+  #   self.column_families = [{:name => "Customers"}]
+  #   establish_connection
+  # end
+  # teardown do
+  #   break_connection
+  # end
+  def establish_connection
+    CassandraObject::Base.establish_connection nil
+    @ks_name = java.util.UUID.randomUUID.to_s.gsub("-","")
+    self.connection.add_keyspace({:name => @ks_name, :strategy => :local, 
+                                   :replication => 1, :column_families => self.column_families}) 
+    connection.keyspace = @ks_name
+    @ks_name
+  end
+
+  def break_connection
+    connection.drop_keyspace(@ks_name)
+    connection.disconnect
   end
 end

@@ -36,9 +36,8 @@ module CassandraObject
         end
 
         def all(keyrange = ''..'', options = {})
-          # results = connection.get_range(column_family, :start => keyrange.first, :finish => keyrange.last, :count=>(options[:limit] || 100))
-          # keys = results.map(&:key)
-          # keys.map {|key| get(key) }
+          attribute_results = connection.get_range(column_family, keyrange.first, keyrange.last, reading_persistence_attribute_options)
+          order_results(attribute_results).values
         end
 
         def first(keyrange = ''..'', options = {})
@@ -120,6 +119,19 @@ module CassandraObject
         end
 
         protected
+
+        def order_results(results)
+          results.inject(ActiveSupport::OrderedHash.new) do |memo, (key, attributes)|
+            if attributes.empty?
+              memo[key] = nil
+            else
+              memo[parse_key(key)] = instantiate(key, attributes)
+            end
+            memo
+          end
+        end
+
+
       end
       
     end

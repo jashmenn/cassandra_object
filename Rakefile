@@ -39,3 +39,5 @@ end
 task :default=>[:test, :cleanup] do
 end
 
+# AUTOTEST=true rstakeout -t 1 -v "ruby -Itest:lib test/basic_scenarios_test.rb" '*/**/*.rb'
+
