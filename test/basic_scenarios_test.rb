@@ -16,7 +16,7 @@ class BasicScenariosTest < CassandraObjectTestCase
     @customer = Customer.create :first_name    => "Michael",
                                 :last_name     => "Koziarski",
                                 :date_of_birth => Date.strptime("1980-08-15", "%Y-%m-%d")
-    @customer_key = @customer.key # to_s
+    @customer_key = @customer.key.to_s
     assert @customer.valid?
   end
 
@@ -36,11 +36,11 @@ class BasicScenariosTest < CassandraObjectTestCase
   end
 
   test "get on a non-existent key returns nil" do
-   assert_nil Customer.get(UU.free("THIS IS NOT A KEY"))
+   assert_nil Customer.get("THIS IS NOT A KEY")
   end
 
   test "a new object is included in Model.all" do
-   assert Customer.all.include?(@customer)
+    assert Customer.all.include?(@customer)
   end
 
   test "date_of_birth is a date" do
@@ -53,32 +53,32 @@ class BasicScenariosTest < CassandraObjectTestCase
     end
   end
 
-  # test "should return nil for attributes without a value" do
-  #  assert_nil @customer.preferences
-  # end
+  test "should return nil for attributes without a value" do
+   assert_nil @customer.preferences
+  end
 
-  # test "should let a user set a Hash valued attribute" do
-  #   val = {"a"=>"b"}
-  #   @customer.preferences = val
-  #   assert_equal val, @customer.preferences
-  #   @customer.save
+  test "should let a user set a Hash valued attribute" do
+    val = {"a"=>"b"}
+    @customer.preferences = val
+    assert_equal val, @customer.preferences
+    @customer.save
     
-  #   other_customer = Customer.get(@customer_key)
-  #   assert_equal val, other_customer.preferences
-  # end
+    other_customer = Customer.get(@customer_key)
+    assert_equal val, other_customer.preferences
+  end
 
-  # test "should validate strings passed to a typed column" do
-  #   assert_raises(ArgumentError){
-  #     @customer.date_of_birth = "35345908"
-  #   }
-  # end
+  test "should validate strings passed to a typed column" do
+    assert_raises(ArgumentError){
+      @customer.date_of_birth = "35345908"
+    }
+  end
 
-  # test "should have a schema version of 0" do
-  #   assert_equal 0, @customer.schema_version
-  # end
+  test "should have a schema version of 0" do
+    assert_equal 0, @customer.schema_version
+  end
 
   test "multiget" do
-    custs = Customer.multi_get([@customer_key, UU.free("This is not a key either")], :reversed => true)
+    custs = Customer.multi_get([@customer_key, "This is not a key either"], :reversed => false)
     customer, nothing = *custs.values
     assert_equal @customer, customer
     assert_nil nothing

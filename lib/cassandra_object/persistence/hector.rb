@@ -22,16 +22,14 @@ module CassandraObject
           # end
 
           o = reading_persistence_attribute_options.merge(options)
-          hkeys = convert_keys_to_java(keys)
+          attribute_results = connection.get_rows(column_family, keys, o)
 
-          attribute_results = connection.get_rows(column_family, hkeys, o)
-          inst_results = instantiate_results(attribute_results)
-          #pp [:inst_results, inst_results.inspect]
-          #pp [:hkeys, hkeys]
-          inst_results
-          #returning(::Hector::OrderedHash.new) do |oh| # restore order
-          #  hkeys.each { |key| oh[parse_key(key)] = inst_results[parse_key(key)] }
-          #end
+          # restore order by keys
+          ordered_results = returning(::Hector::OrderedHash.new) do |oh|
+            keys.each { |key| oh[key] = attribute_results[key] }
+          end
+
+          instantiate_results(ordered_results)
         end
 
         def remove(key)
@@ -66,7 +64,8 @@ module CassandraObject
 
             # @opts = {:n_serializer => :string, :v_serializer => :string, :s_serializer => :string}
 
-            key = key.to_java # TODO - use the key serializer!
+            #key = key.to_java # TODO - use the key serializer!
+            key = key.to_s # string keys
             ech = encode_columns_hash(attributes, schema_version)
             pao = persistence_attribute_options(attributes, schema_version)
             # pp [:write, column_family, key, ech, pao]
@@ -127,7 +126,7 @@ module CassandraObject
         def instantiate_results(results)
           results.inject(ActiveSupport::OrderedHash.new) do |memo, (key, attributes)|
             if attributes.empty?
-              memo[key] = nil
+              memo[key] = nil # could be a garbage key
             else
               memo[parse_key(key)] = instantiate(key, attributes)
             end
