@@ -7,6 +7,10 @@ module CassandraObject
         class UUID
           include Key
 
+          def self.free(string)
+            self.new(java.util.UUID.nameUUIDFromBytes(string.to_java_bytes))
+          end
+
           def initialize(uuid=nil)
             @uuid = case uuid
                     when String then java.util.UUID.fromString(uuid)

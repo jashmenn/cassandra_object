@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class BasicScenariosTest < CassandraObjectTestCase
+  UU = CassandraObject::Identity::UUIDKeyFactory::UUID
+ 
   def setup
     super
     CassandraObject::Base.establish_connection nil
@@ -14,8 +16,7 @@ class BasicScenariosTest < CassandraObjectTestCase
     @customer = Customer.create :first_name    => "Michael",
                                 :last_name     => "Koziarski",
                                 :date_of_birth => Date.strptime("1980-08-15", "%Y-%m-%d")
-    # TODO figure out the UUID stuff
-    @customer_key = @customer.key#.to_s                          
+    @customer_key = @customer.key # to_s
     assert @customer.valid?
   end
 
@@ -34,23 +35,23 @@ class BasicScenariosTest < CassandraObjectTestCase
     assert_equal Date.strptime("1980-08-15", "%Y-%m-%d"), other_customer.date_of_birth
   end
 
-  # test "get on a non-existent key returns nil" do
-  #  assert_nil Customer.get("THIS IS NOT A KEY")
-  # end
+  test "get on a non-existent key returns nil" do
+   assert_nil Customer.get(UU.free("THIS IS NOT A KEY"))
+  end
 
-  # test "a new object is included in Model.all" do
-  #  assert Customer.all.include?(@customer)
-  # end
+  test "a new object is included in Model.all" do
+   assert Customer.all.include?(@customer)
+  end
 
-  # test "date_of_birth is a date" do
-  #   assert @customer.date_of_birth.is_a?(Date)
-  # end
+  test "date_of_birth is a date" do
+    assert @customer.date_of_birth.is_a?(Date)
+  end
 
-  # test "should not let you assign junk to a date column" do
-  #   assert_raise(ArgumentError) do
-  #     @customer.date_of_birth = 24.5
-  #   end
-  # end
+  test "should not let you assign junk to a date column" do
+    assert_raise(ArgumentError) do
+      @customer.date_of_birth = 24.5
+    end
+  end
 
   # test "should return nil for attributes without a value" do
   #  assert_nil @customer.preferences
@@ -76,17 +77,12 @@ class BasicScenariosTest < CassandraObjectTestCase
   #   assert_equal 0, @customer.schema_version
   # end
 
-  # test "multiget" do
-  #   custs = Customer.multi_get([@customer_key, "This is not a key either"], :reversed => true)
-  #   puts "=============="
-  #   pp custs
-  #   puts "======"
-
-  #   pp custs.values
-  #   customer, nothing = *custs.values
-  #   assert_equal @customer, customer
-  #   assert_nil nothing
-  # end
+  test "multiget" do
+    custs = Customer.multi_get([@customer_key, UU.free("This is not a key either")], :reversed => true)
+    customer, nothing = *custs.values
+    assert_equal @customer, customer
+    assert_nil nothing
+  end
 
   # test "creating a new record starts with the right version" do
   #   @invoice  = mock_invoice

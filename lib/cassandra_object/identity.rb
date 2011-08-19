@@ -37,6 +37,18 @@ module CassandraObject
         # thing
         @key_factory.parse(thing)
       end
+
+      def convert_key_to_java(key)
+        case key
+        when String then parse_key(key).to_java
+        else key.to_java
+        end
+      end
+
+      def convert_keys_to_java(keys)
+        keys.collect{|k| convert_key_to_java(k)}
+      end
+
     end
     
     module InstanceMethods

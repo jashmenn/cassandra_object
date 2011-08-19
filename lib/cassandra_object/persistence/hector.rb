@@ -14,9 +14,6 @@ module CassandraObject
           multi_get([key], options).values.first
         end
 
-        def convert_keys(keys)
-          keys.collect(&:to_java)
-        end
 
         def multi_get(keys, options = {})
           # options = {:consistency => self.read_consistency, :limit => 100}.merge(options)
@@ -25,15 +22,15 @@ module CassandraObject
           # end
 
           o = reading_persistence_attribute_options.merge(options)
-          hkeys = convert_keys(keys)
+          hkeys = convert_keys_to_java(keys)
 
           attribute_results = connection.get_rows(column_family, hkeys, o)
           inst_results = instantiate_results(attribute_results)
-          puts inst_results.inspect
-          pp hkeys
+          #pp [:inst_results, inst_results.inspect]
+          #pp [:hkeys, hkeys]
           inst_results
           #returning(::Hector::OrderedHash.new) do |oh| # restore order
-          #  hkeys.each { |key| oh[key] = inst_results[key] }
+          #  hkeys.each { |key| oh[parse_key(key)] = inst_results[parse_key(key)] }
           #end
         end
 
