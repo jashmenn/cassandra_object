@@ -25,6 +25,11 @@ module CassandraObject
         def eql?(other)
           other == self
         end
+
+        def to_java
+          # hmm not sure this will work
+          java.util.UUID.fromString(@value)
+        end
       end
 
       attr_reader :attributes, :separator

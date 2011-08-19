@@ -4,6 +4,8 @@ require 'active_support'
 require 'active_support/version'
 require 'active_support/all'
 require 'active_model'
+require 'time'
+require 'date'
 
 module CassandraObject
   class << self

@@ -14,8 +14,7 @@ end
 class Customer < CassandraObject::Base
   attribute :first_name,     :type => :string
   attribute :last_name,      :type => :string
-  #attribute :date_of_birth,  :type => :date
-  attribute :date_of_birth,  :type => :string
+  attribute :date_of_birth,  :type => :date
   attribute :preferences,    :type => :hash
   attribute :custom_storage, :type => String, :converter=>ReverseStorage
 

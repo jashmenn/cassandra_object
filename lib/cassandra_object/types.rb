@@ -133,14 +133,14 @@ module CassandraObject
           when Integer then thing
           when Float   then thing
           when String  then thing
-          when Date    then thing
-          when Time    then thing
+          #when Date     then Java::JavaUtil::Date.new(thing.to_time.to_i)
+          when DateTime then Java::JavaUtil::Date.new(thing.to_time.to_i)
+          when Time     then Java::JavaUtil::Date.new(thing.to_i)
           when CassandraObject::Identity::UUIDKeyFactory::UUID then thing.uuid
           when ActiveSupport::TimeWithZone then thing
           else
           thing
         end
-        thing
       end
       module_function :encode
 
@@ -149,7 +149,7 @@ module CassandraObject
           when Integer then thing
           when Float   then thing
           when String  then thing
-          when Date    then thing
+          #when Date    then thing
           when Time    then thing
           when ActiveSupport::TimeWithZone then thing
           else
@@ -158,5 +158,21 @@ module CassandraObject
       end
       module_function :decode
     end
+
+    module JavaDateType
+      def encode(date)
+        raise ArgumentError.new("#{self} requires a Date") unless date.kind_of?(Date)
+        Java::JavaUtil::Date.new(date.to_time.to_i)
+      end
+      module_function :encode
+
+      def decode(date)
+        #raise ArgumentError.new("#{str} isn't a String that looks like a Date") unless str.kind_of?(String) && str.match(REGEX)
+        # BOOOOO ruby built in time is piss-poor (or i dont know which libraries to use) TODO, this only works because we're talking about dates not date times
+        Time.at(date.getTime).to_date
+      end
+      module_function :decode
+    end
+
   end
 end

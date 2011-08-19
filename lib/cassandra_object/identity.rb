@@ -31,8 +31,11 @@ module CassandraObject
         end
       end
       
-      def parse_key(string)
-        @key_factory.parse(string)
+      def parse_key(thing)
+        # TODO decide what we want to do here, now that we are using real UUIDs
+        # for now do nothing
+        # thing
+        @key_factory.parse(thing)
       end
     end
     

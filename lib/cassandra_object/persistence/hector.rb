@@ -1,3 +1,6 @@
+require 'hector'
+require 'hector/ordered_hash'
+
 module CassandraObject
   module Persistence
     module Hector
@@ -8,8 +11,11 @@ module CassandraObject
       module ClassMethods
 
         def get(key, options = {})
-          # multi_get([key], options).values.first
           multi_get([key], options).values.first
+        end
+
+        def convert_keys(keys)
+          keys.collect(&:to_java)
         end
 
         def multi_get(keys, options = {})
@@ -18,17 +24,17 @@ module CassandraObject
           #   raise ArgumentError, "Invalid read consistency level: '#{options[:consistency]}'. Valid options are [:quorum, :one]"
           # end
 
-          attribute_results = connection.get_rows(column_family, keys, reading_persistence_attribute_options)
-          # attribute_results = connection.multi_get(column_family, keys.map(&:to_s), :count=>options[:limit], :consistency=>consistency_for_thrift(options[:consistency]))
+          o = reading_persistence_attribute_options.merge(options)
+          hkeys = convert_keys(keys)
 
-          attribute_results.inject(ActiveSupport::OrderedHash.new) do |memo, (key, attributes)|
-            if attributes.empty?
-              memo[key] = nil
-            else
-              memo[parse_key(key)] = instantiate(key, attributes)
-            end
-            memo
-          end
+          attribute_results = connection.get_rows(column_family, hkeys, o)
+          inst_results = instantiate_results(attribute_results)
+          puts inst_results.inspect
+          pp hkeys
+          inst_results
+          #returning(::Hector::OrderedHash.new) do |oh| # restore order
+          #  hkeys.each { |key| oh[key] = inst_results[key] }
+          #end
         end
 
         def remove(key)
@@ -36,8 +42,9 @@ module CassandraObject
         end
 
         def all(keyrange = ''..'', options = {})
-          attribute_results = connection.get_range(column_family, keyrange.first, keyrange.last, reading_persistence_attribute_options)
-          order_results(attribute_results).values
+          attribute_results = connection.get_range(column_family, keyrange.first, keyrange.last, 
+                                                   reading_persistence_attribute_options.merge(options))
+          instantiate_results(attribute_results).values
         end
 
         def first(keyrange = ''..'', options = {})
@@ -62,7 +69,7 @@ module CassandraObject
 
             # @opts = {:n_serializer => :string, :v_serializer => :string, :s_serializer => :string}
 
-            key = key.to_s # TODO - use the key serializer!
+            key = key.to_java # TODO - use the key serializer!
             ech = encode_columns_hash(attributes, schema_version)
             pao = persistence_attribute_options(attributes, schema_version)
             # pp [:write, column_family, key, ech, pao]
@@ -120,7 +127,7 @@ module CassandraObject
 
         protected
 
-        def order_results(results)
+        def instantiate_results(results)
           results.inject(ActiveSupport::OrderedHash.new) do |memo, (key, attributes)|
             if attributes.empty?
               memo[key] = nil
