@@ -7,21 +7,41 @@ if defined?(ActiveSupport::TestCase)
     end
   end
 end
-RunningMan.setup_on ActiveSupport::TestCase
+class CassandraObjectTestCase < ActiveSupport::TestCase
+end
+#RunningMan.setup_on ActiveSupport::TestCase
+RunningMan.setup_on CassandraObjectTestCase
 
 class CassandraObjectTestCase < ActiveSupport::TestCase
   attr_accessor :column_families
   attr_accessor :ks_name
 
-  setup_once do
-    CassandraObject::Base.establish_connection nil
-    @ks_name = java.util.UUID.randomUUID.to_s.gsub("-","")
+  def add_ks
+    #@ks_name = java.util.UUID.randomUUID.to_s.gsub("-","")
+    @ks_name = "cassandra_object_test_case_space"
     self.connection.add_keyspace({:name => @ks_name, :strategy => :local, :replication => 1, 
                                    :column_families => [{:name => "Customers"}, 
                                                         {:name => "Invoices"},
                                                         {:name => "Appointments"},
-                                                        {:name => "Payments"}]}) 
+                                                        {:name => "Payments"},
+                                                        {:name => "CustomerRelationships", :type => :super}]}) 
     connection.keyspace = @ks_name
+  end
+
+  def drop_ks
+    connection.drop_keyspace(@ks_name)
+  end
+
+  setup_once do
+    CassandraObject::Base.establish_connection nil
+
+    begin
+      add_ks
+    rescue Java::MePrettyprintHectorApiExceptions::HInvalidRequestException => e
+      drop_ks
+      add_ks
+    end
+
     Customer.connection = self.connection # ew but thats how class_inheritable_accessor works
     Invoice.connection  = self.connection # ew but thats how class_inheritable_accessor works
     Appointment.connection  = self.connection # ew but thats how class_inheritable_accessor works
@@ -29,7 +49,7 @@ class CassandraObjectTestCase < ActiveSupport::TestCase
   end
 
   teardown_once do
-    connection.drop_keyspace(@ks_name)
+    puts "teardown once"
     connection.disconnect
   end
 

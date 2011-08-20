@@ -25,6 +25,7 @@ if defined?(JRUBY_VERSION)
   # end
 end
 
+require 'cassandra_object/helpers'
 require 'cassandra_object/base'
 
 

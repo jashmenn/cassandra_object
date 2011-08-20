@@ -16,14 +16,14 @@ module CassandraObject
     end
     
     def add(owner, record, set_inverse = true)
-      connection.insert(column_family, owner.key.to_s, {@association_name=>{new_key=>record.key.to_s}})
+      connection.put_row(column_family, owner.key.to_s, {@association_name=>{new_key=>record.key.to_s}})
       if has_inverse? && set_inverse
         inverse.set_inverse(record, owner)
       end
     end
     
     def new_key
-      SimpleUUID::UUID.new
+      CassandraObject::Identity::UUIDKeyFactory.new.to_s # TODO
     end
     
     def column_family

@@ -1,9 +1,8 @@
 require 'test_helper'
 
 class CallbacksTest < CassandraObjectTestCase
-  def setup
-    super
-  end
+  def setup;    super; end
+  def teardown; super; end
 
   context "a newly created record" do
     setup do
