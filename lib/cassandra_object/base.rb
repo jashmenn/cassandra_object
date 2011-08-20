@@ -25,6 +25,7 @@ require 'cassandra_object/collection'
 require 'cassandra_object/types'
 require 'cassandra_object/mocking'
 require 'cassandra_object/errors'
+require 'active_support/json'
 
 module CassandraObject
   class Base

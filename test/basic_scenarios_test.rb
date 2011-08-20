@@ -74,13 +74,12 @@ class BasicScenariosTest < CassandraObjectTestCase
     assert_nil nothing
   end
 
-  # TODO I don't get the point of this test
-  # test "creating a new record starts with the right version" do
-  #   @invoice  = mock_invoice
-  # 
-  #   raw_result = Invoice.get("Invoices", @invoice.key.to_s)
-  #   assert_equal Invoice.current_schema_version, ActiveSupport::JSON.decode(raw_result["schema_version"])
-  # end
+  test "creating a new record starts with the right version" do
+    @invoice  = mock_invoice
+  
+    raw_result = Invoice.connection.get_row("Invoices", @invoice.key.to_s, :n_serializer => :string, :v_serializer => :string)
+    assert_equal Invoice.current_schema_version, ActiveSupport::JSON.decode(raw_result["schema_version"])
+  end
 
   test "to_param works" do
     invoice = mock_invoice
