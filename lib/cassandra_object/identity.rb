@@ -49,6 +49,19 @@ module CassandraObject
         keys.collect{|k| convert_key_to_java(k)}
       end
 
+      def stringify_hkey(key)
+        case key
+        when String then key
+        when CassandraObject::Identity::Key then key.to_s
+        else key
+        end
+      end
+
+      def stringify_hkeys(keys)
+        keys.collect{|k| stringify_hkey(k)}
+      end
+
+
     end
     
     module InstanceMethods

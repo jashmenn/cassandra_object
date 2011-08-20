@@ -14,7 +14,6 @@ module CassandraObject
           multi_get([key], options).values.first
         end
 
-
         def multi_get(keys, options = {})
           # options = {:consistency => self.read_consistency, :limit => 100}.merge(options)
           # unless valid_read_consistency_level?(options[:consistency])
@@ -22,18 +21,19 @@ module CassandraObject
           # end
 
           o = reading_persistence_attribute_options.merge(options)
-          attribute_results = connection.get_rows(column_family, keys, o)
+          keystrings = stringify_hkeys(keys)
+          attribute_results = connection.get_rows(column_family, keystrings, o)
 
           # restore order by keys
           ordered_results = returning(::Hector::OrderedHash.new) do |oh|
-            keys.each { |key| oh[key] = attribute_results[key] }
+            keystrings.each { |key| oh[key] = attribute_results[key] }
           end
 
           instantiate_results(ordered_results)
         end
 
         def remove(key)
-          # connection.remove(column_family, key.to_s, :consistency => write_consistency_for_thrift)
+          connection.delete_rows(column_family, [key.to_s])
         end
 
         def all(keyrange = ''..'', options = {})

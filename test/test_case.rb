@@ -1,11 +1,40 @@
+if defined?(ActiveSupport::TestCase)
+  module ActiveSupport
+    class TestCase
+      def self.final_teardowns
+        @final_teardowns ||= []
+      end
+    end
+  end
+end
+RunningMan.setup_on ActiveSupport::TestCase
 
 class CassandraObjectTestCase < ActiveSupport::TestCase
   attr_accessor :column_families
   attr_accessor :ks_name
 
+  setup_once do
+    CassandraObject::Base.establish_connection nil
+    @ks_name = java.util.UUID.randomUUID.to_s.gsub("-","")
+    self.connection.add_keyspace({:name => @ks_name, :strategy => :local, :replication => 1, 
+                                   :column_families => [{:name => "Customers"}, 
+                                                        {:name => "Invoices"},
+                                                        {:name => "Appointments"},
+                                                        {:name => "Payments"}]}) 
+    connection.keyspace = @ks_name
+    Customer.connection = self.connection # ew but thats how class_inheritable_accessor works
+    Invoice.connection  = self.connection # ew but thats how class_inheritable_accessor works
+    Appointment.connection  = self.connection # ew but thats how class_inheritable_accessor works
+    Payment.connection  = self.connection # ew but thats how class_inheritable_accessor works
+  end
+
+  teardown_once do
+    connection.drop_keyspace(@ks_name)
+    connection.disconnect
+  end
+
   def teardown
-    # dangerous, this depends on the keyspace 
-    # CassandraObject::Base.connection.clear_keyspace!
+    connection.clear_keyspace!(@ks_name)
   end
 
   def mock_invoice

@@ -5,14 +5,6 @@ class BasicScenariosTest < CassandraObjectTestCase
  
   def setup
     super
-    CassandraObject::Base.establish_connection nil
-    @ks_name = java.util.UUID.randomUUID.to_s.gsub("-","")
-    self.connection.add_keyspace({:name => @ks_name, :strategy => :local, :replication => 1, 
-                                   :column_families => [{:name => "Customers"}, {:name => "Invoices"}]}) 
-    connection.keyspace = @ks_name
-    Customer.connection = self.connection # ew but thats how class_inheritable_accessor works
-    Invoice.connection  = self.connection # ew but thats how class_inheritable_accessor works
-
     @customer = Customer.create :first_name    => "Michael",
                                 :last_name     => "Koziarski",
                                 :date_of_birth => Date.strptime("1980-08-15", "%Y-%m-%d")
@@ -22,8 +14,6 @@ class BasicScenariosTest < CassandraObjectTestCase
 
   def teardown
     super
-    connection.drop_keyspace(@ks_name)
-    connection.disconnect
   end
 
   test "a new object can be retrieved by key" do
@@ -84,26 +74,35 @@ class BasicScenariosTest < CassandraObjectTestCase
     assert_nil nothing
   end
 
+  # TODO I don't get the point of this test
   # test "creating a new record starts with the right version" do
   #   @invoice  = mock_invoice
-
-  #   raw_result = Invoice.connection.get("Invoices", @invoice.key.to_s)
+  # 
+  #   raw_result = Invoice.get("Invoices", @invoice.key.to_s)
   #   assert_equal Invoice.current_schema_version, ActiveSupport::JSON.decode(raw_result["schema_version"])
   # end
 
-  # test "to_param works" do
-  #   invoice = mock_invoice
-  #   param = invoice.to_param
-  #   assert_match /[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}/, param
-  #   assert_equal invoice.key, Invoice.parse_key(param)
-  # end
+  test "to_param works" do
+    invoice = mock_invoice
+    param = invoice.to_param
+    assert_match /[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}/, param
+    assert_equal invoice.key, Invoice.parse_key(param)
+  end
 
-  # test "setting a column_family" do
-  #   class Foo < CassandraObject::Base
-  #     self.column_family = 'Bar'
-  #   end
-  #   assert_equal 'Bar', Foo.column_family
-  # end
+  test "setting a column_family" do
+    class Foo < CassandraObject::Base
+      self.column_family = 'Bar'
+    end
+    assert_equal 'Bar', Foo.column_family
+  end
+
+  context "destroying a customer" do
+    should "remove the customer" do
+      key = @customer.key.to_s
+      @customer.destroy
+      assert Customer.get(key).nil?
+    end
+  end
 
   # context "destroying a customer with invoices" do
   #   setup do
@@ -122,78 +121,87 @@ class BasicScenariosTest < CassandraObjectTestCase
   #   end
   # end
 
-  # context "An object with a natural key" do
-  #   setup do
-  #     @payment = Payment.new :reference_number => "12345",
-  #                            :amount           => 1001
-  #     @payment.save!
-  #   end
+  context "An object with a natural key" do
+    setup do
+      @payment = Payment.new :reference_number => "12345",
+                             :amount           => 1001
+      @payment.save!
+    end
 
-  #   should "create a natural key based on that attr" do
-  #     assert_equal "12345", @payment.key.to_s
-  #   end
+    should "create a natural key based on that attr" do
+      assert_equal "12345", @payment.key.to_s
+    end
 
-  #   should "have a key equal to another object with that key" do
-  #     p = Payment.new(:reference_number => "12345",
-  #                     :amount           => 1001)
-  #     p.save
+    should "have a key equal to another object with that key" do
+      p = Payment.new(:reference_number => "12345",
+                      :amount           => 1001)
+      p.save
 
-  #     assert_equal @payment.key, p.key
-  #   end
-  # end
+      assert_equal @payment.key, p.key
+    end
 
-  # context "Model with no attributes" do
-  #   setup do
-  #     class Empty < CassandraObject::Base
-  #     end
-  #   end
+    should "be able to get the object from the database" do
+      p = Payment.get(@payment.key)
+      assert_equal 1001, p.amount
+    end
 
-  #   should "work" do
-  #     e = Empty.new
-  #   end
-  # end
+  end
 
-  # context "A model that allows nils" do
-  #   setup do
-  #     class Nilable < CassandraObject::Base
-  #       attribute :user_id, :type => Integer, :allow_nil => true
-  #     end
-  #   end
+  context "Model with no attributes" do
+    setup do
+      class Empty < CassandraObject::Base
+      end
+    end
 
-  #   should "should be valid with a nil" do
-  #     n = Nilable.new
-  #     assert n.valid?
-  #   end
-  # end
+    should "work" do
+      e = Empty.new
+    end
+  end
 
-  # context "A janky custom key factory" do
-  #   setup do 
-  #     class JankyKeys
-  #       def next_key(object)
-  #         nil
-  #       end
-  #     end
-  #     class JankyObject < CassandraObject::Base
-  #       key JankyKeys.new
-  #     end
-  #     @object = JankyObject.new
-  #   end
+  context "A model that allows nils" do
+    setup do
+      class Nilable < CassandraObject::Base
+        attribute :user_id, :type => Integer, :allow_nil => true
+      end
+    end
 
-  #   should "raise an error on nil key" do
-  #     assert_raises(RuntimeError) do
-  #       @object.save
-  #     end
-  #   end
-  # end
+    should "should be valid with a nil" do
+      n = Nilable.new
+      assert n.valid?
+    end
+  end
+
+  context "A janky custom key factory" do
+    setup do 
+      class JankyKeys
+        def next_key(object)
+          nil
+        end
+      end
+      class JankyObject < CassandraObject::Base
+        key JankyKeys.new
+      end
+      @object = JankyObject.new
+    end
+
+    should "raise an error on nil key" do
+      assert_raises(RuntimeError) do
+        @object.save
+      end
+    end
+  end
 
   # test "updating columns" do
-  #   appt = Appointment.new(:start_time => Time.now, :title => 'emergency meeting')
+  #   #appt = Appointment.new(:start_time => Time.now, :title => 'emergency meeting')
+  #   appt = Appointment.new(:title => 'emergency meeting')
   #   appt.save!
+
   #   appt = Appointment.get(appt.key)
-  #   appt.start_time = Time.now + 1.hour
-  #   appt.end_time = Time.now.utc +  5.hours
+  #   #appt.start_time = Time.now + 1.hour
+  #   #appt.end_time = Time.now.utc +  5.hours
   #   appt.save!
-  #   assert appt.reload.end_time.is_a?(ActiveSupport::TimeWithZone)
+  #   appt.reload
+  #   #assert appt.reload.end_time.is_a?(ActiveSupport::TimeWithZone)
   # end
   
   # test "Saving a class with custom attributes uses the custom converter" do

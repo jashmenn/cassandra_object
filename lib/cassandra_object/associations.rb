@@ -23,11 +23,13 @@ module CassandraObject
       end
       
       def remove(key)
-        begin
-          connection.remove("#{name}Relationships", key.to_s)
-        rescue Cassandra::AccessError => e
-          raise e unless e.message =~ /Invalid column family/
-        end
+        # todo should be able to check from the keyspace description
+        # TODO shouldn't go straight to the connection, should it?
+        #begin
+        #  connection.remove("#{name}Relationships", key.to_s)
+        #rescue AccessError => e # todo
+        #  raise e unless e.message =~ /Invalid column family/
+        #end
         super
       end
     end

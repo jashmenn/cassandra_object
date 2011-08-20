@@ -14,6 +14,7 @@ require 'connection'
 require 'test/unit'
 require 'active_support/test_case'
 require 'shoulda'
+require 'running_man'
 
 require 'fixture_models'
 require 'pp'
