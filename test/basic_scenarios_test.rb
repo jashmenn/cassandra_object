@@ -191,75 +191,76 @@ class BasicScenariosTest < CassandraObjectTestCase
     end
   end
 
-  # test "updating columns" do
-  #   #appt = Appointment.new(:start_time => Time.now, :title => 'emergency meeting')
-  #   appt = Appointment.new(:title => 'emergency meeting')
-  #   appt.save!
+  test "updating columns" do
+    appt = Appointment.new(:start_time => Time.now, :title => 'emergency meeting')
+    appt.save!
 
-  #   appt = Appointment.get(appt.key)
-  #   #appt.start_time = Time.now + 1.hour
-  #   #appt.end_time = Time.now.utc +  5.hours
-  #   appt.save!
-  #   appt.reload
-  #   #assert appt.reload.end_time.is_a?(ActiveSupport::TimeWithZone)
-  # end
+    appt = Appointment.get(appt.key)
+    appt.start_time = Time.now + 1.hour
+    appt.end_time = Time.now.utc +  5.hours
+    appt.save!
+    appt.reload
+    assert appt.reload.end_time.is_a?(ActiveSupport::TimeWithZone)
+  end
   
-  # test "Saving a class with custom attributes uses the custom converter" do
-  #   @customer.custom_storage = "hello"
-  #   @customer.save
+  test "Saving a class with custom attributes uses the custom converter" do
+    @customer.custom_storage = "hello"
+    @customer.save
 
-  #   raw_result = Customer.connection.get("Customers", @customer.key.to_s)
-    
-  #   assert_equal "olleh", raw_result["custom_storage"]
-  #   assert_equal "hello", @customer.reload.custom_storage
-    
-  # end
+    raw_result = Customer.connection.get_row("Customers", @customer.key.to_s, :n_serializer => :string, :v_serializer => :string)
 
-  # context "setting valid consistency levels" do
-  #   setup do
-  #     class Senate < CassandraObject::Base
-  #       consistency_levels :write => :quorum, :read => :quorum
-  #     end
-  #   end
+    assert_equal "olleh", raw_result["custom_storage"]
+    assert_equal "hello", @customer.reload.custom_storage
+  end
 
-  #   should "should have the settings" do
-  #     assert_equal :quorum, Senate.write_consistency
-  #     assert_equal :quorum, Senate.read_consistency
-  #   end
-  # end
+  context "setting valid consistency levels" do
+    setup do
+      class Senate < CassandraObject::Base
+        consistency_levels :write => :quorum, :read => :quorum
+      end
+    end
 
-  # context "setting invalid consistency levels" do
-  #   context "invalid write consistency" do
-  #     should "raise an error" do
-  #       assert_raises(ArgumentError) do
-  #         class BadWriter < CassandraObject::Base
-  #           consistency_levels :write => :foo, :read => :quorum
-  #         end
-  #       end
-  #     end
-  #   end
+    should "should have the settings" do
+      assert_equal :quorum, Senate.write_consistency
+      assert_equal :quorum, Senate.read_consistency
+    end
+  end
 
-  #   context "invalid read consistency" do
-  #     should "raise an error" do
-  #       assert_raises(ArgumentError) do
-  #         class BadReader < CassandraObject::Base
-  #           consistency_levels :write => :quorum, :read => :foo
-  #         end
-  #       end
-  #     end
-  #   end
-  # end
+  context "setting invalid consistency levels" do
+    context "invalid write consistency" do
+      should "raise an error" do
+        assert_raises(ArgumentError) do
+          class BadWriter < CassandraObject::Base
+            consistency_levels :write => :foo, :read => :quorum
+          end
+        end
+      end
+    end
 
-  # test "ignoring columns we don't know about" do
-  #   # if there's a column in the row that's not configured as an attribute, it should be ignored with no errors
+    context "invalid read consistency" do
+      should "raise an error" do
+        assert_raises(ArgumentError) do
+          class BadReader < CassandraObject::Base
+            consistency_levels :write => :quorum, :read => :foo
+          end
+        end
+      end
+    end
+  end
 
-  #   payment = Payment.new(:reference_number => 'abc123', :amount => 26)
-  #   payment.save
+  test "ignoring columns we don't know about" do
+    # if there's a column in the row that's not configured as an attribute, it should be ignored with no errors
 
-  #   Payment.connection.insert(Payment.column_family, payment.key.to_s, {"bogus" => 'very bogus', "schema_version" => payment.schema_version.to_s}, :consistency => Payment.send(:write_consistency_for_thrift))
+    payment = Payment.new(:reference_number => 'abc123', :amount => 26)
+    payment.save
 
-  #   assert_nothing_raised do
-  #     Payment.get(payment.key)
-  #   end
-  # end
+    Payment.connection.put_row(Payment.column_family, 
+                               payment.key.to_s, 
+                               {"bogus" => 'very bogus', "schema_version" => payment.schema_version.to_s}, 
+                               :consistency => Payment.send(:write_consistency_for_thrift))
+
+    assert_nothing_raised do
+      Payment.get(payment.key)
+    end
+  end
 end

@@ -6,7 +6,13 @@ module CassandraObject
     module Hector
       extend ActiveSupport::Concern
       included do
+        class_inheritable_writer :write_consistency
+        class_inheritable_writer :read_consistency
       end
+
+      VALID_READ_CONSISTENCY_LEVELS = [:one, :quorum, :all]
+      VALID_WRITE_CONSISTENCY_LEVELS = VALID_READ_CONSISTENCY_LEVELS + [:zero]
+
 
       module ClassMethods
 
@@ -25,7 +31,6 @@ module CassandraObject
           attribute_results = connection.get_rows(column_family, keystrings, o)
 
           # restore order by keys
-
           ordered_results = returning(::Hector::OrderedHash.new) do |oh|
             keystrings.each { |key| oh[key] = attribute_results[key] }
           end
@@ -117,9 +122,29 @@ module CassandraObject
             memo
           end
         end
-        
-        def column_family_configuration
-          # [{:Name=>column_family, :CompareWith=>"UTF8Type"}]
+
+        def consistency_levels(levels)
+          if levels.has_key?(:write)
+            unless valid_write_consistency_level?(levels[:write])
+              raise ArgumentError, "Invalid write consistency level. Valid levels are: #{VALID_WRITE_CONSISTENCY_LEVELS.inspect}. You gave me #{levels[:write].inspect}"
+            end
+            self.write_consistency = levels[:write]
+          end
+
+          if levels.has_key?(:read)
+            unless valid_read_consistency_level?(levels[:read])
+              raise ArgumentError, "Invalid read consistency level. Valid levels are #{VALID_READ_CONSISTENCY_LEVELS.inspect}. You gave me #{levels[:write].inspect}"
+            end
+            self.read_consistency = levels[:read]
+          end
+        end
+
+        def write_consistency
+          read_inheritable_attribute(:write_consistency) || :quorum
+        end
+
+        def read_consistency
+          read_inheritable_attribute(:read_consistency) || :quorum
         end
 
         protected
@@ -134,6 +159,37 @@ module CassandraObject
             memo
           end
         end
+
+        def valid_read_consistency_level?(level)
+          !!VALID_READ_CONSISTENCY_LEVELS.include?(level)
+        end
+
+        def valid_write_consistency_level?(level)
+          !!VALID_WRITE_CONSISTENCY_LEVELS.include?(level)
+        end
+
+        def column_family_configuration
+          # [{:Name=>column_family, :CompareWith=>"UTF8Type"}]
+        end
+
+        def write_consistency_for_thrift
+          consistency_for_thrift(write_consistency)
+        end
+
+        def read_consistency_for_thrift
+          consistency_for_thrift(read_consistency)
+        end
+
+        # TODO
+        def consistency_for_thrift(consistency)
+          {
+            :zero   => nil, #Cassandra::Consistency::ZERO,
+            :one    => nil, #Cassandra::Consistency::ONE, 
+            :quorum => nil, #Cassandra::Consistency::QUORUM,
+            :all    => nil, #Cassandra::Consistency::ALL
+          }[consistency]
+        end
+
 
 
       end
