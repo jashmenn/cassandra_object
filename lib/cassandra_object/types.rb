@@ -139,7 +139,7 @@ module CassandraObject
           when CassandraObject::Identity::UUIDKeyFactory::UUID then thing.uuid
           when ActiveSupport::TimeWithZone then thing
           else
-          thing
+          thing.to_java
         end
       end
       module_function :encode
@@ -173,6 +173,23 @@ module CassandraObject
       end
       module_function :decode
     end
+
+    module JavaIntegerType
+      def encode(i); Java::JavaLang::Integer.new(i); end
+      module_function :encode
+
+      def decode(i); i; end
+      module_function :decode
+    end
+
+    module JavaLongType
+      def encode(i); Java::JavaLang::Long.new(i); end
+      module_function :encode
+
+      def decode(i); i; end
+      module_function :decode
+    end
+
 
   end
 end

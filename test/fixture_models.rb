@@ -48,7 +48,7 @@ class Customer < CassandraObject::Base
 end
 
 class Invoice < CassandraObject::Base
-  attribute :number,     :type=>:integer
+  attribute :number,     :type=>:long
   attribute :total,      :type=>:float
   attribute :gst_number, :type=>:string
 

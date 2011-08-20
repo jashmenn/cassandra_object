@@ -2,9 +2,9 @@ if defined?(JRUBY_VERSION)
   module TypeRegistration
   include_package 'me.prettyprint.cassandra.serializers'
   S = Java::MePrettyprintCassandraSerializers;
-  CassandraObject::Base.register_attribute_type(:integer, Integer, CassandraObject::ToJavaType, S::IntegerSerializer.get)
+  CassandraObject::Base.register_attribute_type(:integer, Integer, CassandraObject::JavaIntegerType, S::IntegerSerializer.get)
   CassandraObject::Base.register_attribute_type(:float, Float, CassandraObject::ToJavaType, S::FloatSerializer.get)
-  CassandraObject::Base.register_attribute_type(:long, Fixnum, CassandraObject::ToJavaType, S::LongSerializer.get)
+  CassandraObject::Base.register_attribute_type(:long, Fixnum, CassandraObject::JavaLongType, S::LongSerializer.get)
   CassandraObject::Base.register_attribute_type(:string, String, CassandraObject::ToJavaType, S::StringSerializer.get)
   CassandraObject::Base.register_attribute_type(:boolean, Object, CassandraObject::ToJavaType, S::BooleanSerializer.get)
   CassandraObject::Base.register_attribute_type(:byte_buffer, Object, CassandraObject::ToJavaType, S::ByteBufferSerializer.get)

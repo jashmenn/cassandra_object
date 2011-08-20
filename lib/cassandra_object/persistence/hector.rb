@@ -25,6 +25,7 @@ module CassandraObject
           attribute_results = connection.get_rows(column_family, keystrings, o)
 
           # restore order by keys
+
           ordered_results = returning(::Hector::OrderedHash.new) do |oh|
             keystrings.each { |key| oh[key] = attribute_results[key] }
           end
