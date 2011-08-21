@@ -1,3 +1,10 @@
+# WARNING
+
+This is an experimental branch exploring using hector.rb rather than
+cassandra.rb. It is incomplete and somewhat messy. That said, basic objects and
+serialization are working. However, associations and many other features are
+incomplete.
+
 # Cassandra Object
 
 Cassandra Object provides a nice API for working with [Cassandra](http://incubator.apache.org/cassandra/). CassandraObjects are mostly duck-type compatible with ActiveRecord objects so most of your controller code should work ok.  Note that they're *mostly* compatible, Cassandra has no support for dynamic queries, or sorting.  So the following kinds of operations aren't supported and *never will be*.
