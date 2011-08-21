@@ -34,24 +34,24 @@ class OneToManyAssociationsTest < CassandraObjectTestCase
     end
     
     should "have set the inverse" do
-      # assert_equal @customer, @invoice.customer
+      assert_equal @customer, @invoice.customer
     end
     
-  #   should "have also written to cassandra" do
-  #     assert_equal @invoice, @customer.invoices.to_a.first
-  #   end
+    should "have also written to cassandra" do
+      assert_equal @invoice, @customer.invoices.to_a.first
+    end
     
-  #   context "Simple Read-Repair" do
-  #     setup do
-  #       add_junk_key
-  #       assert_ordered ["SomethingStupid", @invoice.key], association_keys_in_cassandra
-  #     end
+    # context "Simple Read-Repair" do
+    #   setup do
+    #     add_junk_key
+    #     assert_ordered ["SomethingStupid", @invoice.key], association_keys_in_cassandra
+    #   end
     
-  #     should "tidy up when fetching" do
-  #       assert_equal [@invoice], @customer.invoices.all
-  #       assert_equal [@invoice.key.to_s], association_keys_in_cassandra
-  #     end
-  #   end
+    #   should "tidy up when fetching" do
+    #     assert_equal [@invoice], @customer.invoices.all
+    #     assert_equal [@invoice.key.to_s], association_keys_in_cassandra
+    #   end
+    # end
   
   #   context "More complicated Read-Repair" do
   #     setup do

@@ -24,7 +24,8 @@ class CassandraObjectTestCase < ActiveSupport::TestCase
                                                         {:name => "Invoices"},
                                                         {:name => "Appointments"},
                                                         {:name => "Payments"},
-                                                        {:name => "CustomerRelationships", :type => :super}]}) 
+                                                        {:name => "CustomerRelationships", :type => :super},
+                                                        {:name => "InvoiceRelationships", :type => :super}]}) 
     connection.keyspace = @ks_name
   end
 

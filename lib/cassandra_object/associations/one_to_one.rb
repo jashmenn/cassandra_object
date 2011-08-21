@@ -23,11 +23,19 @@ module CassandraObject
     end
     
     def clear(owner)
-      connection.remove(column_family, owner.key.to_s, @association_name)
+      connection.delete_columns(column_family, owner.key.to_s, [@association_name])
     end
     
     def find(owner)
-      if key = connection.get(column_family, owner.key.to_s, @association_name.to_s, :count=>1).values.first
+      #sc = connection.get_super_rows(column_family, owner.key.to_s, @association_name.to_s, 
+      sc = connection.get_super_rows(column_family, owner.key.to_s, @association_name.to_s, 
+                                     :count=>1,
+                                     :n_serializer => :string,
+                                     :v_serializer => :string,
+                                     :s_serializer => :string )
+
+    # if key = connection.get_super_columns(column_family, owner.key.to_s, @association_name.to_s, :count=>1).values.first
+      if key = sc.values.first[@association_name.to_s].values.first.to_s
         target_class.get(key)
       else
         nil
@@ -36,14 +44,14 @@ module CassandraObject
     
     def set(owner, record, set_inverse = true)
       clear(owner)
-      connection.insert(column_family, owner.key.to_s, {@association_name=>{new_key => record.key.to_s}})
+      connection.put_row(column_family, owner.key.to_s, {@association_name=>{new_key => record.key.to_s}})
       if has_inverse? && set_inverse
         inverse.set_inverse(record, owner)
       end
     end
     
     def new_key
-      SimpleUUID::UUID.new
+      CassandraObject::Identity::UUIDKeyFactory::UUID.new.to_s # TODO
     end
     
     def set_inverse(owner, record)

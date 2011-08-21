@@ -23,7 +23,8 @@ module CassandraObject
     end
     
     def new_key
-      CassandraObject::Identity::UUIDKeyFactory.new.to_s # TODO
+      CassandraObject::Identity::UUIDKeyFactory::UUID.new.to_s # TODO
+
     end
     
     def column_family

@@ -21,9 +21,13 @@ module CassandraObject
       end
       
       while objects.size < number_to_find && !out_of_keys
-        index_results = connection.get(@column_family, @key, @super_column, :count=>limit,
-                                                                            :start=>start_with,
-                                                                            :reversed=>@options[:reversed])
+        index_results = connection.get_super_rows(@column_family, @key, @super_column, :count=>limit,
+                                       :start=>start_with,
+                                       :reversed=>@options[:reversed],
+                                       :n_serializer => :string,
+                                       :v_serializer => :string,
+                                       :s_serializer => :string )
+        index_results = index_results.values.first[@super_column]
 
         out_of_keys  = index_results.size < limit
 
