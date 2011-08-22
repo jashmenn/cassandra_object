@@ -72,6 +72,7 @@ class OneToManyAssociationsTest < CassandraObjectTestCase
       # I don't see why we have any expectionation of ordering
       # given that the keys are just hashes. They aren't ordered
       # by time or even by a natural key.
+      # TODO - make the association a timeuuid this way we can expect this ordering(?)
       should "return the last one when passed a limit of one, and not touch the keys" do
         #assert_equal [@third_invoice], @customer.invoices.all(:limit=>1)
         #assert_set_equal [@third_invoice.key,"SomethingStupid", @second_invoice.key,  @invoice.key],
@@ -92,60 +93,63 @@ class OneToManyAssociationsTest < CassandraObjectTestCase
     end
    end
   
-  # context "A customer with an invoice added to its paid invoices association (which has no explicit reversed option)" do
-  #   setup do
-  #     @customer = Customer.create :first_name    => "Michael",
-  #                                 :last_name     => "Koziarski",
-  #                                 :date_of_birth => Date.parse("1980/08/15")
+  context "A customer with an invoice added to its paid invoices association (which has no explicit reversed option)" do
+    setup do
+      @customer = Customer.create :first_name    => "Michael",
+                                  :last_name     => "Koziarski",
+                                  :date_of_birth => Date.parse("1980/08/15")
 
-  #     assert @customer.valid?, @customer.errors
+      assert @customer.valid?
+      assert @customer.errors.empty?
 
-  #     @invoice  = mock_invoice
-  #     assert @invoice.valid?, @invoice.errors
+      @invoice  = mock_invoice
+      assert @invoice.valid?
+      assert @invoice.errors.empty?
 
-  #     @customer.paid_invoices << @invoice
-  #   end
+      @customer.paid_invoices << @invoice
+    end
 
-  #   should "return invoice from association" do
-  #     assert_equal @invoice, @customer.paid_invoices.to_a.first
-  #   end
-  # end
+    should "return invoice from association" do
+      assert_equal @invoice, @customer.paid_invoices.to_a.first
+    end
+  end
 
-  # context "Association proxy create" do
-  #   setup do
-  #     @customer = Customer.create! :first_name    => "Michael",
-  #                                  :last_name     => "Koziarski",
-  #                                  :date_of_birth => Date.parse("1980/08/15")
-  #     @invoice = @customer.invoices.create :number=>50, :total=>25.0
-  #   end
+  context "Association proxy create" do
+    setup do
+      @customer = Customer.create! :first_name    => "Michael",
+                                   :last_name     => "Koziarski",
+                                   :date_of_birth => Date.parse("1980/08/15")
+      @invoice = @customer.invoices.create :number=>50, :total=>25.0
+    end
     
-  #   should "return the invoice" do
-  #     assert_kind_of Invoice, @invoice
-  #   end
+    should "return the invoice" do
+      assert_kind_of Invoice, @invoice
+    end
     
-  #   should "have set the attributes" do
-  #     assert_equal 50, @invoice.number
-  #     assert_equal 25.0, @invoice.total
-  #   end
+    should "have set the attributes" do
+      assert_equal 50, @invoice.number
+      assert_equal 25.0, @invoice.total
+    end
     
-  #   should "have set the inverse" do
-  #     assert_equal @customer, @invoice.customer 
-  #   end
-  # end
+    should "have set the inverse" do
+      assert_equal @customer, @invoice.customer 
+    end
+  end
 
-  # context "Association proxy all" do
-  #   setup do
-  #     @customer = Customer.create! :first_name    => "Michael",
-  #                                  :last_name     => "Koziarski",
-  #                                  :date_of_birth => Date.parse("1980/08/15")
-  #     @first  = @customer.invoices.create :number => 50, :total => 25.0
-  #     @second = @customer.invoices.create :number => 50, :total => 25.0
-  #   end
+  context "Association proxy all" do
+    setup do
+      @customer = Customer.create! :first_name    => "Michael",
+                                   :last_name     => "Koziarski",
+                                   :date_of_birth => Date.parse("1980/08/15")
+      @first  = @customer.invoices.create :number => 50, :total => 25.0
+      @second = @customer.invoices.create :number => 50, :total => 25.0
+    end
 
-  #   should "suport overriding :reversed value" do
-  #     assert_ordered [@first.key, @second.key], @customer.invoices.all(:reversed => false).map(&:key)
-  #   end
-  # end
+    should "suport overriding :reversed value" do
+      #assert_ordered [@first.key, @second.key], @customer.invoices.all(:reversed => false).map(&:key)
+      assert_set_equal [@first.key, @second.key], @customer.invoices.all(:reversed => false).map(&:key)
+    end
+  end
 
   def add_junk_key
     Customer.associations[:invoices].add(@customer, MockRecord.new("SomethingStupid"))
