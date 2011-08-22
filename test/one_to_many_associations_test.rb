@@ -40,18 +40,22 @@ class OneToManyAssociationsTest < CassandraObjectTestCase
     should "have also written to cassandra" do
       assert_equal @invoice, @customer.invoices.to_a.first
     end
+
     
-    # context "Simple Read-Repair" do
-    #   setup do
-    #     add_junk_key
-    #     assert_ordered ["SomethingStupid", @invoice.key], association_keys_in_cassandra
-    #   end
+    context "Simple Read-Repair" do
+      setup do
+        add_junk_key
+        #assert_ordered ["SomethingStupid", @invoice.key.to_s], association_keys_in_cassandra # TODO, get ordering consistent
+        ak = association_keys_in_cassandra
+        assert ak.include?("SomethingStupid")
+        assert ak.include?(@invoice.key.to_s) 
+      end
     
-    #   should "tidy up when fetching" do
-    #     assert_equal [@invoice], @customer.invoices.all
-    #     assert_equal [@invoice.key.to_s], association_keys_in_cassandra
-    #   end
-    # end
+      should "tidy up when fetching" do
+        assert_equal [@invoice], @customer.invoices.all
+        assert_equal [@invoice.key.to_s], association_keys_in_cassandra
+      end
+    end
   
   #   context "More complicated Read-Repair" do
   #     setup do
@@ -151,7 +155,8 @@ class OneToManyAssociationsTest < CassandraObjectTestCase
   end
 
   def association_keys_in_cassandra
-    Customer.connection.get(Customer.associations[:invoices].column_family, @customer.key.to_s, "invoices", :reversed=>true).values
+    a = Customer.connection.get_super_row(Customer.associations[:invoices].column_family, @customer.key.to_s, "invoices", :reversed=>true, :n_serializer => :string, :v_serializer => :string, :s_serializer => :string)
+    a.values
   end
   
   def index_key_for(object)

@@ -80,7 +80,8 @@ module CassandraObject
     end
     
     def remove(index_key)
-      connection.remove(@column_family, @key, @super_column, index_key)
+      connection.delete_super_columns(@column_family, {@key => {@super_column => [index_key]}},
+                                      {:n_serializer => :string, :v_serializer => :string, :s_serializer => :string})
     end
     
     def validator(&validator)
