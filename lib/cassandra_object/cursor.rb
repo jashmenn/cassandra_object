@@ -27,7 +27,7 @@ module CassandraObject
                                        :n_serializer => :string,
                                        :v_serializer => :string,
                                        :s_serializer => :string )
-        index_results = index_results.values.first[@super_column]
+        index_results = index_results.values.first[@super_column] || {}
 
         out_of_keys  = index_results.size < limit
 

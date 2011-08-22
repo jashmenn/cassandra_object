@@ -8,6 +8,10 @@ module CassandraObject
       
       define_methods!
     end
+
+    def self.default_association_serializers
+      {:n_serializer => :uuid, :v_serializer => :string, :s_serializer => :string}
+    end
     
     def find(owner, options = {})
       reversed = options.has_key?(:reversed) ? options[:reversed] : reversed?
@@ -16,15 +20,15 @@ module CassandraObject
     end
     
     def add(owner, record, set_inverse = true)
-      connection.put_row(column_family, owner.key.to_s, {@association_name=>{new_key=>record.key.to_s}})
+      opts = self.class.default_association_serializers
+      connection.put_row(column_family, owner.key.to_s, {@association_name=>{new_key.uuid=>record.key.to_s}}, opts)
       if has_inverse? && set_inverse
         inverse.set_inverse(record, owner)
       end
     end
     
     def new_key
-      CassandraObject::Identity::UUIDKeyFactory::UUID.new.to_s # TODO
-
+      CassandraObject::Identity::TimeUUIDKeyFactory::UUID.new#.to_s # TODO
     end
     
     def column_family
