@@ -80,6 +80,14 @@ class CassandraObjectTestCase < ActiveSupport::TestCase
     assert_equal expected_object_order, actual_order, "Collection was ordered incorrectly: #{actual_indexes.inspect}"
   end
 
+  def assert_set_equal(expected, actual, to_s_before_comparing = true)
+    if to_s_before_comparing
+      expected = expected.map(&:to_s) 
+      actual = actual.map(&:to_s)
+    end
+    assert_equal Set.new(expected), Set.new(actual), "Collections weren't equal"
+  end
+
   # e.g.
   # setup do
   #   self.column_families = [{:name => "Customers"}]

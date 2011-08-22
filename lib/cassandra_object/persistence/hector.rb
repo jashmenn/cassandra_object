@@ -151,6 +151,7 @@ module CassandraObject
 
         def instantiate_results(results)
           results.inject(ActiveSupport::OrderedHash.new) do |memo, (key, attributes)|
+
             if attributes.empty?
               memo[key] = nil # could be a garbage key
             else
