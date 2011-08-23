@@ -11,25 +11,31 @@ module CassandraObject
         @attribute_name = attribute_name
         @model_class    = model_class
       end
+
+      def self.serialization_options
+        {:n_serializer => :string, :v_serializer => :string, :s_serializer => :string}
+      end
       
       def find(attribute_value)
+        opts = self.class.serialization_options
         # first find the key value
-        key = @model_class.connection.get(column_family, attribute_value.to_s, 'key')
+        key = @model_class.connection.get_column(column_family, attribute_value.to_s, 'key', opts)
         # then pass to get
         if key
           @model_class.get(key.to_s)
         else
-          @model_class.connection.remove(column_family, attribute_value.to_s)
+          @model_class.connection.delete_rows(column_family, attribute_value.to_s)
           nil
         end
       end
       
       def write(record)
-        @model_class.connection.insert(column_family, record.send(@attribute_name).to_s, {'key'=>record.key.to_s})
+        opts = self.class.serialization_options
+        @model_class.connection.put_row(column_family, record.send(@attribute_name).to_s, {'key'=>record.key.to_s}, opts)
       end
       
       def remove(record)
-        @model_class.connection.remove(column_family, record.send(@attribute_name).to_s)
+        @model_class.connection.delete_rows(column_family, [record.send(@attribute_name).to_s])
       end
       
       def column_family
@@ -47,17 +53,26 @@ module CassandraObject
         @model_class    = model_class
         @reversed       = options[:reversed]
       end
+
+      def self.serialization_options
+        {:s_serializer => :string, :n_serializer => :uuid, :v_serializer => :string}
+      end
       
       def find(attribute_value, options = {})
-        cursor = CassandraObject::Cursor.new(@model_class, column_family, attribute_value.to_s, @attribute_name.to_s, :start_after=>options[:start_after], :reversed=>@reversed)
+        cursor = CassandraObject::Cursor.new(@model_class, column_family, attribute_value.to_s, @attribute_name.to_s, 
+                                             :start_after=>options[:start_after], :reversed=>@reversed)
         cursor.validator do |object|
           object.send(@attribute_name) == attribute_value
         end
+        #cursor.find(options[:limit] || 100, :n_serializer => :uuid)
         cursor.find(options[:limit] || 100)
       end
       
       def write(record)
-        @model_class.connection.insert(column_family, record.send(@attribute_name).to_s, {@attribute_name.to_s=>{new_key=>record.key.to_s}})
+        opts = self.class.serialization_options
+        k = new_key
+        #pp [:write_index, column_family, record.send(@attribute_name).to_s, {@attribute_name.to_s=>{new_key=>record.key.to_s}}, k, k.uuid]
+        @model_class.connection.put_row(column_family, record.send(@attribute_name).to_s, {@attribute_name.to_s=>{k.uuid=>record.key.to_s}}, opts)
       end
       
       def remove(record)
@@ -68,7 +83,7 @@ module CassandraObject
       end
       
       def new_key
-        SimpleUUID::UUID.new
+        CassandraObject::Identity::TimeUUIDKeyFactory::UUID.new
       end
       
       def column_family_configuration

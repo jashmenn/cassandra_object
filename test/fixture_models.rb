@@ -25,7 +25,7 @@ class Customer < CassandraObject::Base
 
   key :uuid
 
-  # index :last_name, :reversed=>true
+  index :last_name, :reversed=>true
 
   association :invoices, :unique=>false, :inverse_of=>:customer, :reversed=>true
   association :paid_invoices, :unique=>false, :class_name=>'Invoice'
@@ -52,7 +52,7 @@ class Invoice < CassandraObject::Base
   attribute :total,      :type=>:float
   attribute :gst_number, :type=>:string
 
-  # index :number, :unique=>true
+  index :number, :unique=>true
 
   association :customer, :unique=>true, :inverse_of=>:invoices
 

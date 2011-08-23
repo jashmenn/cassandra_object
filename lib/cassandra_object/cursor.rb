@@ -9,10 +9,13 @@ module CassandraObject
       @validators    = []
     end
     
-    def find(number_to_find)
+    # TODO right now this cursor only works on supercolumn families, make work for standard
+    def find(number_to_find, options = {})
       limit       = number_to_find
       objects     = CassandraObject::Collection.new
       out_of_keys = false
+      options = {:n_serializer => :uuid, :v_serializer => :string, :s_serializer => :string }.merge(options)
+      serializer_options = options.pluck(:s_serializer, :n_serializer, :v_serializer)
 
       if start_with = @options[:start_after]
         limit += 1
@@ -21,13 +24,9 @@ module CassandraObject
       end
       
       while objects.size < number_to_find && !out_of_keys
-        index_results = connection.get_super_rows(@column_family, @key, @super_column, :count=>limit,
-                                       :start=>start_with,
-                                       :reversed=>@options[:reversed],
-                                       :n_serializer => :string,
-                                       :v_serializer => :string,
-                                       :s_serializer => :string )
-        index_results = index_results.values.first[@super_column] || {}
+        o = {:count=>limit, :start=>start_with, :reversed=>@options[:reversed]}.merge(options)
+        index_results = connection.get_sub_range(@column_family, @key, @key, @super_column, o)
+        index_results = index_results[@key]
 
         out_of_keys  = index_results.size < limit
 
@@ -39,7 +38,7 @@ module CassandraObject
         values = index_results.values
         
         missing_keys = []
-        
+
         results = values.empty? ? {} : @target_class.multi_get(values)
         results.each do |(key, result)|
           if result.nil?
@@ -51,7 +50,7 @@ module CassandraObject
           @target_class.multi_get(missing_keys, :quorum=>true).each do |(key, result)|
             index_key = index_results.index(key)
             if result.nil?
-              remove(index_key)
+              remove(index_key, serializer_options)
               results.delete(key)
             else
               results[key] = result
@@ -63,7 +62,7 @@ module CassandraObject
           if @validators.all? {|v| v.call(o) }
             objects << o
           else
-            remove(index_results.index(o.key))
+            remove(index_results.index(o.key), options)
           end
         end
         
@@ -79,9 +78,9 @@ module CassandraObject
       @target_class.connection
     end
     
-    def remove(index_key)
-      connection.delete_super_columns(@column_family, {@key => {@super_column => [index_key]}},
-                                      {:n_serializer => :string, :v_serializer => :string, :s_serializer => :string})
+    def remove(index_key, options = {})
+      options = options.merge({:v_serializer => options[:n_serializer]}) # TODO - not sure why
+      connection.delete_super_columns(@column_family, {@key => {@super_column => [index_key]}}, options)
     end
     
     def validator(&validator)

@@ -10,7 +10,7 @@ module CassandraObject
     end
 
     def self.default_association_serializers
-      {:n_serializer => :uuid, :v_serializer => :string, :s_serializer => :string}
+      {:s_serializer => :string, :n_serializer => :uuid, :v_serializer => :string}
     end
     
     def find(owner, options = {})

@@ -28,14 +28,12 @@ class CursorTest < CassandraObjectTestCase
       should "leave values alone it doesn't scroll past" do
         assert_equal [@new], @cursor.find(1)
 
-        assert_ordered [@new.key, @to_die.key, @old.key],
-                     association_keys_in_cassandra
+        assert_ordered [@new.key, @to_die.key, @old.key], association_keys_in_cassandra
       end
 
       should "clean up when it hits a missing record" do
         assert_equal [@new, @old], @cursor.find(2)
-        assert_ordered [@new.key, @old.key],
-                     association_keys_in_cassandra
+        assert_ordered [@new.key, @old.key], association_keys_in_cassandra
       end
     end
     
@@ -54,10 +52,12 @@ class CursorTest < CassandraObjectTestCase
     
   end
   
-  
   def association_keys_in_cassandra
-    res = Customer.connection.get(Customer.associations[:invoices].column_family, @customer.key.to_s, "invoices", :reversed=>true)
-    res.values
+    res = Customer.connection.get_super_row(Customer.associations[:invoices].column_family, 
+                                            @customer.key.to_s, "invoices", 
+                                            :reversed => true,
+                                            :n_serializer => :uuid, :v_serializer => :string, :s_serializer => :string)
+    res.values.reverse
   end
   
   def invoices_cursor(options = {})

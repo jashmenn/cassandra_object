@@ -21,3 +21,9 @@ def retryable(options = {}, &block)
 
   yield
 end
+
+class Hash
+  def pluck(*keys)
+    keys.inject({}){|acc,k| acc[k] = self[k]; acc }
+  end
+end

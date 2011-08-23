@@ -28,6 +28,7 @@ module CassandraObject
 
           o = reading_persistence_attribute_options.merge(options)
           keystrings = stringify_hkeys(keys)
+          #pp [:multi_get, column_family, keystrings, o]
           attribute_results = connection.get_rows(column_family, keystrings, o)
 
           # restore order by keys
@@ -151,7 +152,6 @@ module CassandraObject
 
         def instantiate_results(results)
           results.inject(ActiveSupport::OrderedHash.new) do |memo, (key, attributes)|
-
             if attributes.empty?
               memo[key] = nil # could be a garbage key
             else
