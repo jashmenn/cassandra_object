@@ -58,6 +58,7 @@ module CassandraObject
           end
         end
 
+        #pp [:results, results]
         results.values.each do |o|
           if @validators.all? {|v| v.call(o) }
             objects << o

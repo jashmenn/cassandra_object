@@ -64,18 +64,34 @@ module CassandraObject
         cursor.validator do |object|
           object.send(@attribute_name) == attribute_value
         end
-        #cursor.find(options[:limit] || 100, :n_serializer => :uuid)
         cursor.find(options[:limit] || 100)
       end
       
       def write(record)
         opts = self.class.serialization_options
         k = new_key
+        # pp "writing for #{record} %s %s %s %s %s" % [column_family, record.send(@attribute_name).to_s, @attribute_name.to_s, k.uuid.to_s, record.key.to_s]
+
         #pp [:write_index, column_family, record.send(@attribute_name).to_s, {@attribute_name.to_s=>{new_key=>record.key.to_s}}, k, k.uuid]
         @model_class.connection.put_row(column_family, record.send(@attribute_name).to_s, {@attribute_name.to_s=>{k.uuid=>record.key.to_s}}, opts)
+
+        # if we are changing a value that was previously indexed we need to delete the old index
+        # this is why you don't put these junk uuid's before the record key
+        # the record key should be the column name and a single bytes should be the value
+        # this would allow us to get a specific column and then delete it
+        if record.changes.has_key?(@attribute_name.to_s) && !record.changes[@attribute_name.to_s].first.nil?
+          # TODO right here we need to delete the instance of this record being in the index
+          #pp record.changes[@attribute_name.to_s]
+          #old_key = record.changes[@attribute_name.to_s].first
+          # index_results = @model_class.connection.get_sub_range(column_family, old_key, old_key, @attribute_name.to_s, opts)
+          # pp [:change_the_key, index_results]
+          # index_results = index_results[@key]
+          # @model_class.connection.put_row(column_family, record.send(@attribute_name).to_s, {@attribute_name.to_s=>{k.uuid=>record.key.to_s}}, opts)
+        end
       end
       
       def remove(record)
+        # pp "calling remove #{record}"
       end
       
       def column_family

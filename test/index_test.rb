@@ -1,63 +1,46 @@
 require 'test_helper'
 
 class IndexTest < CassandraObjectTestCase
+  TUUID = CassandraObject::Identity::TimeUUIDKeyFactory::UUID
 
-  setup do
-    unless self.connection
-      puts "Establishing Connection"
-      self.column_families = [{:name => "Customers"},
-                              {:name => "Invoices"},
-                              {:name => "InvoicesByNumber"}]
-      self.establish_connection
-      Customer.connection = self.connection # wtf
-      Invoice.connection = self.connection # wtf
+  context "A non-unique index" do
+    setup do
+      @last_name = ActiveSupport::SecureRandom.hex(5)
+      @koz = Customer.create :first_name=>"Michael", :last_name=>@last_name, :date_of_birth=>28.years.ago.to_date
+      @wife = Customer.create :first_name=>"Anika", :last_name=>@last_name, :date_of_birth=>30.years.ago.to_date
+    end
+    
+    # should "Return both values" do
+    #   assert_ordered [@wife.key, @koz.key], Customer.find_all_by_last_name(@last_name).map(&:key)
+    # end
+    
+    # should "return the older when the newer is destroyed" do
+    #   @wife.destroy
+    #   assert_equal [@koz.key], Customer.find_all_by_last_name(@last_name).map(&:key)
+    # end
+    
+    should "return a single value when the original one is changed" do
+      @wife.last_name = "WTF"
+      @wife.save
+      assert_equal [@koz.key], Customer.find_all_by_last_name(@last_name).map(&:key)
     end
   end
 
-  teardown do
-    # break_connection
-  end
-
-  # context "A non-unique index" do
+  # context "A corrupt non-unique index" do
   #   setup do
+  #     @sopts = {:s_serializer => :string, :n_serializer => :uuid, :v_serializer => :string}
   #     @last_name = ActiveSupport::SecureRandom.hex(5)
   #     @koz = Customer.create :first_name=>"Michael", :last_name=>@last_name, :date_of_birth=>28.years.ago.to_date
+  #     connection.put_row("CustomersByLastName", @last_name, {"last_name"=>{TUUID.new.uuid=>"ROFLSKATES"}}, @sopts)
   #     @wife = Customer.create :first_name=>"Anika", :last_name=>@last_name, :date_of_birth=>30.years.ago.to_date
   #   end
     
-  #   should "Return both values" do
+  #   should "Return both values and clean up" do
   #     assert_ordered [@wife.key, @koz.key], Customer.find_all_by_last_name(@last_name).map(&:key)
+  #     assert_ordered [@wife.key, @koz.key], connection.get_super_row("CustomersByLastName", @last_name, "last_name", @sopts).values.reverse
   #   end
     
-  #   should "return the older when the newer is destroyed" do
-  #     @wife.destroy
-  #     assert_equal [@koz.key], Customer.find_all_by_last_name(@last_name).map(&:key)
-  #   end
-    
-  #   should "return a single value when the original one is changed" do
-  #     @wife.last_name = "WTF"
-  #     @wife.save
-  #     assert_equal [@koz.key], Customer.find_all_by_last_name(@last_name).map(&:key)
-  #   end
   # end
-
-  # TODO why is this corrupt?
-  context "A corrupt non-unique index" do
-   setup do
-     @last_name = ActiveSupport::SecureRandom.hex(5)
-     @koz = Customer.create :first_name=>"Michael", :last_name=>@last_name, :date_of_birth=>28.years.ago.to_date
-     connection.put_row("CustomersByLastName", @last_name, 
-                        {"last_name"=>{CassandraObject::Identity::TimeUUIDKeyFactory::UUID.new.uuid=>"ROFLSKATES"}}, 
-                        {:s_serializer => :string, :n_serializer => :uuid, :v_serializer => :string})
-     @wife = Customer.create :first_name=>"Anika", :last_name=>@last_name, :date_of_birth=>30.years.ago.to_date
-   end
-   
-   should "Return both values and clean up" do
-     assert_ordered [@wife.key, @koz.key], Customer.find_all_by_last_name(@last_name).map(&:key)
-     assert_ordered [@wife.key, @koz.key], connection.get("CustomersByLastName", @last_name, "last_name", :reversed=>true).values
-   end
-   
-  end
   
   # context "A unique index" do
   #   setup do
