@@ -8,3 +8,6 @@ vendor/gems/*
 vendor/jars/*
 Gemfile.lock
 .#*
+.emacs.desktop
+.emacs.desktop.lock
+\#*#
