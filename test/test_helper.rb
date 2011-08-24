@@ -4,6 +4,7 @@ require 'rubygems'
 require 'bundler'
 
 if defined?(JRUBY_VERSION)
+require 'java'
 gem 'hector.rb'
 require 'hector'
 end

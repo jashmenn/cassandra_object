@@ -33,7 +33,7 @@ module CassandraObject
     class_inheritable_writer :connection_class
 
     def self.connection_class
-      read_inheritable_attribute(:connection_class) || Cassandra
+      read_inheritable_attribute(:connection_class) || defined?(JRUBY_VERSION) ? Hector : Cassandra
     end
 
     module ConnectionManagement

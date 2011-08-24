@@ -36,7 +36,7 @@ class CassandraObjectTestCase < ActiveSupport::TestCase
   end
 
   setup_once do
-    puts "setup_once"
+    # puts "setup_once"
     CassandraObject::Base.establish_connection nil
 
     begin
@@ -53,7 +53,7 @@ class CassandraObjectTestCase < ActiveSupport::TestCase
   end
 
   teardown_once do
-    puts "teardown_once"
+    # puts "teardown_once"
     break_connection
   end
 
@@ -100,14 +100,14 @@ class CassandraObjectTestCase < ActiveSupport::TestCase
   # teardown do
   #   break_connection
   # end
-  def establish_connection
-    CassandraObject::Base.establish_connection nil
-    @ks_name = java.util.UUID.randomUUID.to_s.gsub("-","")
-    self.connection.add_keyspace({:name => @ks_name, :strategy => :local, 
-                                   :replication => 1, :column_families => self.column_families}) 
-    connection.keyspace = @ks_name
-    @ks_name
-  end
+  # def establish_connection
+  #   CassandraObject::Base.establish_connection nil
+  #   @ks_name = java.util.UUID.randomUUID.to_s.gsub("-","")
+  #   self.connection.add_keyspace({:name => @ks_name, :strategy => :local, 
+  #                                  :replication => 1, :column_families => self.column_families}) 
+  #   connection.keyspace = @ks_name
+  #   @ks_name
+  # end
 
   def break_connection
     connection.drop_keyspace(@ks_name)
@@ -143,6 +143,7 @@ if defined?(MiniTest::Unit)
           end
 
           if suite.respond_to?(:final_teardowns)
+            # pp [suite, suite.final_teardowns.size]
             suite.final_teardowns.each do |teardown|
               teardowns << teardown
             end
