@@ -7,6 +7,16 @@ if defined?(ActiveSupport::TestCase)
     end
   end
 end
+# module ActiveSupport
+#   module Inflector
+#     class Inflections
+#       def humanize(thing)
+#         return thing
+#       end
+#     end
+#   end
+# end
+
 class CassandraObjectTestCase < ActiveSupport::TestCase
 end
 #RunningMan.setup_on ActiveSupport::TestCase

@@ -32,7 +32,7 @@ module CassandraObject
           attribute_results = connection.get_rows(column_family, keystrings, o)
 
           # restore order by keys
-          ordered_results = returning(::Hector::OrderedHash.new) do |oh|
+          ordered_results = ::Hector::OrderedHash.new.tap do |oh|
             keystrings.each { |key| oh[key] = attribute_results[key] }
           end
 
@@ -54,13 +54,13 @@ module CassandraObject
         end
 
         def create(attributes)
-          returning new(attributes) do |object|
+          new(attributes).tap do |object|
             object.save
           end
         end
 
         def write(key, attributes, schema_version)
-          returning(key) do |key|
+          key.tap do |key|
             # todo, key shouldn't be cast to a string here
             #pp [:write, column_family, key.to_s, attributes, schema_version, #   encode_columns_hash(attributes, schema_version)]
 
@@ -90,7 +90,7 @@ module CassandraObject
           schema_version = attributes.delete('schema_version').to_i
 
           attributes.delete_if{|k,_| !model_attributes.keys.include?(k)}
-          returning allocate do |object|
+          allocate.tap do |object|
             object.instance_variable_set("@schema_version", schema_version)
             object.instance_variable_set("@key", parse_key(key))
             object.instance_variable_set("@attributes", decode_columns_hash(attributes).with_indifferent_access)

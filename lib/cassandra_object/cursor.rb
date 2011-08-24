@@ -49,7 +49,7 @@ module CassandraObject
     
         unless missing_keys.empty?
           @target_class.multi_get(missing_keys, :quorum=>true).each do |(key, result)|
-            index_key = index_results.index(key)
+            index_key = index_results.key(key)
             if result.nil?
               remove(index_key, serializer_options)
               results.delete(key)
@@ -63,7 +63,7 @@ module CassandraObject
           if @validators.all? {|v| v.call(o) }
             objects << o
           else
-            remove(index_results.index(o.key.to_s), options)
+            remove(index_results.key(o.key.to_s), options)
           end
         end
         
