@@ -7,19 +7,9 @@ if defined?(ActiveSupport::TestCase)
     end
   end
 end
-# module ActiveSupport
-#   module Inflector
-#     class Inflections
-#       def humanize(thing)
-#         return thing
-#       end
-#     end
-#   end
-# end
 
 class CassandraObjectTestCase < ActiveSupport::TestCase
 end
-#RunningMan.setup_on ActiveSupport::TestCase
 RunningMan.setup_on CassandraObjectTestCase
 
 class CassandraObjectTestCase < ActiveSupport::TestCase
@@ -101,23 +91,6 @@ class CassandraObjectTestCase < ActiveSupport::TestCase
     end
     assert_equal Set.new(expected), Set.new(actual), "Collections weren't equal"
   end
-
-  # e.g.
-  # setup do
-  #   self.column_families = [{:name => "Customers"}]
-  #   establish_connection
-  # end
-  # teardown do
-  #   break_connection
-  # end
-  # def establish_connection
-  #   CassandraObject::Base.establish_connection nil
-  #   @ks_name = java.util.UUID.randomUUID.to_s.gsub("-","")
-  #   self.connection.add_keyspace({:name => @ks_name, :strategy => :local, 
-  #                                  :replication => 1, :column_families => self.column_families}) 
-  #   connection.keyspace = @ks_name
-  #   @ks_name
-  # end
 
   def break_connection
     connection.drop_keyspace(@ks_name)
