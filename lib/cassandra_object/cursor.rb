@@ -26,6 +26,7 @@ module CassandraObject
       while objects.size < number_to_find && !out_of_keys
         o = {:count=>limit, :start=>start_with, :reversed=>@options[:reversed]}.merge(options)
         index_results = connection.get_sub_range(@column_family, @key, @key, @super_column, o)
+        index_results[@key] ||= {} # hmmm
         index_results = index_results[@key]
 
         out_of_keys  = index_results.size < limit

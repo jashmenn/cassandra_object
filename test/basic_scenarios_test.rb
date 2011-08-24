@@ -103,22 +103,22 @@ class BasicScenariosTest < CassandraObjectTestCase
     end
   end
 
-  # context "destroying a customer with invoices" do
-  #   setup do
-  #     @invoice = mock_invoice
-  #     @customer.invoices << @invoice
+  context "destroying a customer with invoices" do
+    setup do
+      @invoice = mock_invoice
+      @customer.invoices << @invoice
       
-  #     @customer.destroy
-  #   end
+      @customer.destroy
+    end
     
-  #   should "Have removed the customer" do
-  #     assert Customer.connection.get("Customers", @customer.key.to_s).empty?
-  #   end
+    should "Have removed the customer" do
+      assert Customer.connection.get_row("Customers", @customer.key.to_s).empty?
+    end
     
-  #   should "Have removed the associations too" do
-  #     assert_equal Hash.new, Customer.connection.get("CustomerRelationships", @customer.key.to_s)
-  #   end
-  # end
+    should "Have removed the associations too" do
+      # assert_equal Hash.new, Customer.connection.get_row("CustomerRelationships", @customer.key.to_s)
+    end
+  end
 
   context "An object with a natural key" do
     setup do

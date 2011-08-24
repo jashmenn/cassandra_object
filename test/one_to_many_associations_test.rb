@@ -51,8 +51,7 @@ class OneToManyAssociationsTest < CassandraObjectTestCase
     
       should "tidy up when fetching" do
         assert_equal [@invoice], @customer.invoices.all
-        #assert_equal [@invoice.key.to_s], association_keys_in_cassandra # huh?, invoices.all should just return the invoice, but i dont see why the association_keys_in_cassandra should be the same
-        assert_ordered ["SomethingStupid", @invoice.key.to_s], association_keys_in_cassandra.reverse
+        assert_equal [@invoice.key.to_s], association_keys_in_cassandra
       end
     end
   
@@ -78,8 +77,8 @@ class OneToManyAssociationsTest < CassandraObjectTestCase
       end
     
       should "return them all when passed a limit of 3, and clean up the keys" do
-        assert_ordered [@third_invoice, @second_invoice, @invoice].reverse, @customer.invoices.all(:limit=>3), false
-        #assert_ordered [@third_invoice.key, @second_invoice.key,  @invoice.key], association_keys_in_cassandra
+        assert_ordered [@third_invoice, @second_invoice, @invoice], @customer.invoices.all(:limit=>3), false
+        assert_ordered [@third_invoice.key, @second_invoice.key,  @invoice.key], association_keys_in_cassandra.reverse
       end
 
     
