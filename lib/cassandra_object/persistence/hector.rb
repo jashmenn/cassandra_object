@@ -69,6 +69,7 @@ module CassandraObject
             #pp self.connection_class
             #pp connection.keyspace.getKeyspaceName
 
+
             # @opts = {:n_serializer => :string, :v_serializer => :string, :s_serializer => :string}
 
             #key = key.to_java # TODO - use the key serializer!

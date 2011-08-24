@@ -22,15 +22,25 @@ module CassandraObject
         key = @model_class.connection.get_column(column_family, attribute_value.to_s, 'key', opts)
         # then pass to get
         if key
-          @model_class.get(key.to_s)
+          model = @model_class.get(key.to_s)
+          if model 
+            # get worked
+            return model
+          else
+            # bad index delete it
+            @model_class.connection.delete_rows(column_family, [attribute_value.to_s])
+            nil
+          end
         else
-          @model_class.connection.delete_rows(column_family, attribute_value.to_s)
+          # bad index, delete it
+          @model_class.connection.delete_rows(column_family, [attribute_value.to_s])
           nil
         end
       end
       
       def write(record)
         opts = self.class.serialization_options
+        # pp [:uniq_write, column_family, record.send(@attribute_name).to_s, {'key'=>record.key.to_s}]
         @model_class.connection.put_row(column_family, record.send(@attribute_name).to_s, {'key'=>record.key.to_s}, opts)
       end
       
@@ -55,7 +65,8 @@ module CassandraObject
       end
 
       def self.serialization_options
-        {:s_serializer => :string, :n_serializer => :uuid, :v_serializer => :string}
+         # {:s_serializer => :string, :n_serializer => :uuid, :v_serializer => :string}
+        {}
       end
       
       def find(attribute_value, options = {})
@@ -71,8 +82,7 @@ module CassandraObject
         opts = self.class.serialization_options
         k = new_key
         # pp "writing for #{record} %s %s %s %s %s" % [column_family, record.send(@attribute_name).to_s, @attribute_name.to_s, k.uuid.to_s, record.key.to_s]
-
-        #pp [:write_index, column_family, record.send(@attribute_name).to_s, {@attribute_name.to_s=>{new_key=>record.key.to_s}}, k, k.uuid]
+        # pp [:write_index, column_family, record.send(@attribute_name).to_s, {@attribute_name.to_s=>{new_key=>record.key.to_s}}, k, k.uuid]
         @model_class.connection.put_row(column_family, record.send(@attribute_name).to_s, {@attribute_name.to_s=>{k.uuid=>record.key.to_s}}, opts)
 
         # if we are changing a value that was previously indexed we need to delete the old index
@@ -85,6 +95,7 @@ module CassandraObject
           #old_key = record.changes[@attribute_name.to_s].first
           # index_results = @model_class.connection.get_sub_range(column_family, old_key, old_key, @attribute_name.to_s, opts)
           # pp [:change_the_key, index_results]
+
           # index_results = index_results[@key]
           # @model_class.connection.put_row(column_family, record.send(@attribute_name).to_s, {@attribute_name.to_s=>{k.uuid=>record.key.to_s}}, opts)
         end

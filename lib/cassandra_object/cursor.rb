@@ -58,12 +58,11 @@ module CassandraObject
           end
         end
 
-        #pp [:results, results]
         results.values.each do |o|
           if @validators.all? {|v| v.call(o) }
             objects << o
           else
-            remove(index_results.index(o.key), options)
+            remove(index_results.index(o.key.to_s), options)
           end
         end
         
