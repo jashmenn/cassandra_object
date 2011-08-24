@@ -71,7 +71,7 @@ class OneToManyAssociationsTest < CassandraObjectTestCase
       end
     
       should "return the last one when passed a limit of one, and not touch the keys" do
-        # assert_equal [@third_invoice], @customer.invoices.all(:limit=>1) # TODO
+        assert_equal [@third_invoice], @customer.invoices.all(:limit=>1) # TODO
         assert_ordered [@third_invoice.key,"SomethingStupid", @second_invoice.key,  @invoice.key],
                      association_keys_in_cassandra.reverse
       end
@@ -84,7 +84,7 @@ class OneToManyAssociationsTest < CassandraObjectTestCase
     
       should "return the first invoice when told to start after the second" do
         # TODO
-        # assert_ordered [@invoice.key], @customer.invoices.all(:limit=>1, :start_after=>index_key_for(@second_invoice)).map(&:key)
+        assert_ordered [@invoice.key], @customer.invoices.all(:limit=>1, :start_after=>index_key_for(@second_invoice)).map(&:key)
         assert_ordered [@third_invoice.key,"SomethingStupid", @second_invoice.key,  @invoice.key],
                      association_keys_in_cassandra.reverse
       end
@@ -160,7 +160,8 @@ class OneToManyAssociationsTest < CassandraObjectTestCase
   end
   
   def index_key_for(object)
-    Customer.connection.get(Customer.associations[:invoices].column_family, @customer.key.to_s, "invoices").each do |(key, value)|
+    Customer.connection.get_super_row(Customer.associations[:invoices].column_family, @customer.key.to_s, "invoices",
+       :n_serializer => :uuid, :v_serializer => :string, :s_serializer => :string).each do |(key, value)|
       if value == object.key.to_s
         return key
       end
