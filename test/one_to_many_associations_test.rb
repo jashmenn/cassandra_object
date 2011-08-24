@@ -45,7 +45,6 @@ class OneToManyAssociationsTest < CassandraObjectTestCase
     context "Simple Read-Repair" do
       setup do
         add_junk_key
-        #assert_set_equal ["SomethingStupid", @invoice.key.to_s], association_keys_in_cassandra
         assert_ordered ["SomethingStupid", @invoice.key.to_s], association_keys_in_cassandra.reverse
       end
     
@@ -71,7 +70,7 @@ class OneToManyAssociationsTest < CassandraObjectTestCase
       end
     
       should "return the last one when passed a limit of one, and not touch the keys" do
-        assert_equal [@third_invoice], @customer.invoices.all(:limit=>1) # TODO
+        assert_equal [@third_invoice], @customer.invoices.all(:limit=>1)
         assert_ordered [@third_invoice.key,"SomethingStupid", @second_invoice.key,  @invoice.key],
                      association_keys_in_cassandra.reverse
       end
@@ -83,7 +82,6 @@ class OneToManyAssociationsTest < CassandraObjectTestCase
 
     
       should "return the first invoice when told to start after the second" do
-        # TODO
         assert_ordered [@invoice.key], @customer.invoices.all(:limit=>1, :start_after=>index_key_for(@second_invoice)).map(&:key)
         assert_ordered [@third_invoice.key,"SomethingStupid", @second_invoice.key,  @invoice.key],
                      association_keys_in_cassandra.reverse
