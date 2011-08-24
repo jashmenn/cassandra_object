@@ -1,3 +1,5 @@
+$:.unshift(File.dirname(__FILE__))
+# require 'monkey_watch'
 require 'rubygems'
 require 'bundler'
 

@@ -36,6 +36,7 @@ class CassandraObjectTestCase < ActiveSupport::TestCase
   end
 
   setup_once do
+    puts "setup_once"
     CassandraObject::Base.establish_connection nil
 
     begin
@@ -52,11 +53,12 @@ class CassandraObjectTestCase < ActiveSupport::TestCase
   end
 
   teardown_once do
-    puts "teardown once"
-    connection.disconnect
+    puts "teardown_once"
+    break_connection
   end
 
   def teardown
+    super
     connection.clear_keyspace!(@ks_name)
   end
 
@@ -110,5 +112,54 @@ class CassandraObjectTestCase < ActiveSupport::TestCase
   def break_connection
     connection.drop_keyspace(@ks_name)
     connection.disconnect
+  end
+end
+
+if defined?(MiniTest::Unit)
+  module MiniTest
+    class Unit
+
+      def run_test_suites filter = /./
+        @test_count, @assertion_count = 0, 0
+        old_sync, @@out.sync = @@out.sync, true if @@out.respond_to? :sync=
+        last = nil
+        teardowns = []
+        
+          TestCase.test_suites.each do |suite|
+          suite.test_methods.grep(filter).each do |test|
+            inst = suite.new test
+            inst._assertions = 0
+            @@out.print "#{suite}##{test}: " if @verbose
+
+            @start_time = Time.now
+            result = inst.run(self)
+
+            @@out.print "%.2f s: " % (Time.now - @start_time) if @verbose
+            @@out.print result
+            @@out.puts if @verbose
+            @test_count += 1
+            @assertion_count += inst._assertions
+            last = inst if !inst.nil?
+          end
+
+          if suite.respond_to?(:final_teardowns)
+            suite.final_teardowns.each do |teardown|
+              teardowns << teardown
+            end
+          end
+
+        end
+
+        if last
+          teardowns.each do |teardown|
+            teardown.run(last)
+          end
+        end
+
+        @@out.sync = old_sync if @@out.respond_to? :sync=
+          [@test_count, @assertion_count]
+      end
+
+    end
   end
 end
