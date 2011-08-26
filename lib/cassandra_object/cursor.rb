@@ -51,15 +51,9 @@ module CassandraObject
           end
         end
 
-        #pp [@column_family, @key, @super_column, @options]
-        #pp [:results, results]
-        #pp [:index_results, index_results]
-
-
         unless missing_keys.empty?
           @target_class.multi_get(missing_keys, :quorum=>true).each do |(key, result)|
-            # pp [key, result]
-            index_key = index_results.key(key)
+            index_key = use_intermediate_key ? index_results.key(key) : key
             if result.nil?
               remove(index_key, serializer_options)
               results.delete(key)
@@ -73,7 +67,8 @@ module CassandraObject
           if @validators.all? {|v| v.call(o) }
             objects << o
           else
-            remove(index_results.key(o.key.to_s), options)
+            removal_key = use_intermediate_key ? index_results.key(o.key.to_s) : o.key.to_s
+            remove(removal_key, options)
           end
         end
         
