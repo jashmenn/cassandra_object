@@ -27,7 +27,12 @@ class CassandraObjectTestCase < ActiveSupport::TestCase
                                                         {:name => "CustomerRelationships", :type => :super},
                                                         {:name => "InvoiceRelationships", :type => :super},
                                                         {:name => "CustomersByLastName", :type => :super, :comparator => :utf8, :subcomparator => :time_uuid},
-                                                        {:name => "InvoicesByNumber"}]}) 
+                                                        {:name => "InvoicesByNumber"},
+                                                        {:name => "Tags"},
+                                                        {:name => "Bookmarks"},
+                                                        {:name => "TagRelationships", :type => :super, :comparator => :utf8, :subcomparator => :utf8},
+                                                        {:name => "BookmarkRelationships", :type => :super, :comparator => :utf8, :subcomparator => :utf8}
+                                                       ]}) 
     connection.keyspace = @ks_name
   end
 
@@ -50,6 +55,8 @@ class CassandraObjectTestCase < ActiveSupport::TestCase
     Invoice.connection  = self.connection # ew but thats how class_inheritable_accessor works
     Appointment.connection  = self.connection # ew but thats how class_inheritable_accessor works
     Payment.connection  = self.connection # ew but thats how class_inheritable_accessor works
+    Tag.connection  = self.connection # ew but thats how class_inheritable_accessor works
+    Bookmark.connection  = self.connection # ew but thats how class_inheritable_accessor works
   end
 
   teardown_once do

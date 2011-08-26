@@ -14,6 +14,12 @@ module CassandraObject
         super << {:Name=>"#{name}Relationships", :CompareWith=>"UTF8Type", :CompareSubcolumnsWith=>"TimeUUIDType", :ColumnType=>"Super"}
       end
       
+      # What's the difference in associations?
+      # examples:
+      # one_to_one, :intermediate_key  = "PostRelationships" / <post-key> / "tags" / <uuid>      / <tag-key>
+      # one_to_one,                    = "PostRelationships" / <post-key> / "tags" / <tag-key>   / bool
+      # one_to_many, :intermediate_key = "PostRelationships" / <post-key> / "tags" / <time-uuid> / <tag-key>
+      # one_to_many,                   = "PostRelationships" / <post-key> / "tags" / <tag-key>   / bool 
       def association(association_name, options= {})
         if options[:unique]
           write_inheritable_hash(:associations, {association_name => OneToOneAssociation.new(association_name, self, options)})

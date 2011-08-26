@@ -9,19 +9,34 @@ module CassandraObject
       define_methods!
     end
 
-    def self.default_association_serializers
-      {:s_serializer => :string, :n_serializer => :uuid, :v_serializer => :string}
+    def use_intermediate_key?
+      @options.include?(:intermediate_key) ? @options[:intermediate_key] : true
+    end
+
+    def serializers
+      @options[:serializers] ||= {}
+      s = use_intermediate_key? ?
+             {:s_serializer => :string, :n_serializer => :uuid,   :v_serializer => :string } :
+             {:s_serializer => :string, :n_serializer => :string, :v_serializer => :boolean}
+      s.merge(@options[:serializers])
     end
     
     def find(owner, options = {})
       reversed = options.has_key?(:reversed) ? options[:reversed] : reversed?
-      cursor   = CassandraObject::Cursor.new(target_class, column_family, owner.key.to_s, @association_name, :start_after => options[:start_after], :reversed => reversed)
-      cursor.find(options[:limit] || 100)
+      opts = self.serializers.merge({:start_after => options[:start_after], :reversed => reversed, 
+                                :intermediate_key => use_intermediate_key?}).merge(options)
+      serializer_options = opts.pluck(:s_serializer, :n_serializer, :v_serializer)
+      cursor   = CassandraObject::Cursor.new(target_class, column_family, owner.key.to_s, @association_name, opts)
+      cursor.find(options[:limit] || 100, serializer_options)
     end
     
-    def add(owner, record, set_inverse = true)
-      opts = self.class.default_association_serializers
-      connection.put_row(column_family, owner.key.to_s, {@association_name=>{new_key.uuid=>record.key.to_s}}, opts)
+    def add(owner, record, set_inverse = true, options = {})
+      opts = self.serializers.merge(options)
+      if use_intermediate_key?
+        connection.put_row(column_family, owner.key.to_s, {@association_name=>{new_key.uuid=>record.key.to_s}}, opts)
+      else
+        connection.put_row(column_family, owner.key.to_s, {@association_name=>{record.key.to_s=>true}}, opts)
+      end
       if has_inverse? && set_inverse
         inverse.set_inverse(record, owner)
       end

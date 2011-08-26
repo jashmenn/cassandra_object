@@ -8,6 +8,10 @@ module CassandraObject
 
       define_methods!
     end
+
+    def use_intermediate_key?
+      @options[:intermediate_key]
+    end
     
     def define_methods!
       @owner_class.class_eval <<-eos
@@ -25,14 +29,19 @@ module CassandraObject
     def clear(owner)
       connection.delete_columns(column_family, owner.key.to_s, [@association_name])
     end
+
+    def self.default_association_serializers
+      {:s_serializer => :string, :n_serializer => :uuid, :v_serializer => :string}
+    end
+
+    def serializers
+      @options[:serializers] ||= {}
+      self.class.default_association_serializers.merge(@options[:serializers])
+    end
     
     def find(owner)
-      #sc = connection.get_super_rows(column_family, owner.key.to_s, @association_name.to_s, 
-      sc = connection.get_super_rows(column_family, owner.key.to_s, @association_name.to_s, 
-                                     :count=>1,
-                                     :n_serializer => :string,
-                                     :v_serializer => :string,
-                                     :s_serializer => :string )
+      opts = serializers.merge({:count => 1})
+      sc = connection.get_super_rows(column_family, owner.key.to_s, @association_name.to_s, opts)
 
     # if key = connection.get_super_columns(column_family, owner.key.to_s, @association_name.to_s, :count=>1).values.first
       if key = sc.values.first[@association_name.to_s].values.first.to_s
@@ -44,14 +53,14 @@ module CassandraObject
     
     def set(owner, record, set_inverse = true)
       clear(owner)
-      connection.put_row(column_family, owner.key.to_s, {@association_name=>{new_key => record.key.to_s}})
+      connection.put_row(column_family, owner.key.to_s, {@association_name=>{new_key.uuid => record.key.to_s}})
       if has_inverse? && set_inverse
         inverse.set_inverse(record, owner)
       end
     end
     
     def new_key
-      CassandraObject::Identity::UUIDKeyFactory::UUID.new.to_s # TODO
+      CassandraObject::Identity::UUIDKeyFactory::UUID.new # TODO
     end
     
     def set_inverse(owner, record)

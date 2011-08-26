@@ -35,12 +35,14 @@ module CassandraObject
           index_results.delete(start_with)
         end
 
+        missing_keys = []
         keys = index_results.keys
         values = index_results.values
-        
-        missing_keys = []
 
-        results = values.empty? ? {} : @target_class.multi_get(values)
+        lookup_keys = @options[:intermediate_key] ? values : keys
+        
+        results = lookup_keys.empty? ? {} : @target_class.multi_get(lookup_keys)
+ 
         results.each do |(key, result)|
           if result.nil?
             missing_keys << key

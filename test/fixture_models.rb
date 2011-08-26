@@ -88,3 +88,22 @@ class Appointment < CassandraObject::Base
 
   key :natural, :attributes => :title
 end
+
+
+class Bookmark < CassandraObject::Base
+  attribute :name, :type => :string
+  attribute :url,  :type => :string
+
+  key :uuid
+
+  association :tags, :unique=>false, :inverse_of=>:bookmarks, :reversed=>true, :intermediate_key=>false
+
+end
+
+class Tag < CassandraObject::Base
+  attribute :name, :type => :string
+
+  key :natural, :attributes => :name
+
+  association :bookmarks, :unique=>false, :inverse_of=>:tags, :reversed=>true, :intermediate_key=>false
+end
