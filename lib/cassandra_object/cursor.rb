@@ -17,6 +17,8 @@ module CassandraObject
       options = {:n_serializer => :uuid, :v_serializer => :string, :s_serializer => :string }.merge(options)
       serializer_options = options.pluck(:s_serializer, :n_serializer, :v_serializer)
 
+      use_intermediate_key = @options.include?(:intermediate_key) ? @options[:intermediate_key] : true
+
       if start_with = @options[:start_after]
         limit += 1
       else
@@ -39,7 +41,7 @@ module CassandraObject
         keys = index_results.keys
         values = index_results.values
 
-        lookup_keys = @options[:intermediate_key] ? values : keys
+        lookup_keys = use_intermediate_key ? values : keys
         
         results = lookup_keys.empty? ? {} : @target_class.multi_get(lookup_keys)
  
@@ -48,9 +50,15 @@ module CassandraObject
             missing_keys << key
           end
         end
-    
+
+        #pp [@column_family, @key, @super_column, @options]
+        #pp [:results, results]
+        #pp [:index_results, index_results]
+
+
         unless missing_keys.empty?
           @target_class.multi_get(missing_keys, :quorum=>true).each do |(key, result)|
+            # pp [key, result]
             index_key = index_results.key(key)
             if result.nil?
               remove(index_key, serializer_options)
@@ -83,6 +91,7 @@ module CassandraObject
     
     def remove(index_key, options = {})
       options = options.merge({:v_serializer => options[:n_serializer]}) # TODO - not sure why
+      # pp [@column_family, {@key => {@super_column => [index_key]}}, options]
       connection.delete_super_columns(@column_family, {@key => {@super_column => [index_key]}}, options)
     end
     
