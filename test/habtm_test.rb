@@ -33,14 +33,24 @@ class HABTMTest < CassandraObjectTestCase
       assert_set_equal [@b2.name, @b1.name], @beet.bookmarks.all.map(&:name)
     end
 
+    should "be idempotent in adding relationships" do
+      assert_set_equal ["beets", "bears"], 
+        Bookmark.connection.get_super_row(Bookmark.associations[:tags].column_family, @b1.key.to_s, "tags", @sopts).keys
+      @b1.tags << @bear
+      assert_set_equal ["beets", "bears"], 
+        Bookmark.connection.get_super_row(Bookmark.associations[:tags].column_family, @b1.key.to_s, "tags", @sopts).keys
+    end
+
     should "be able to delete tags" do
       @b1.tags << @battle
 
-      # uniq
-      a = Bookmark.connection.get_super_row(Bookmark.associations[:tags].column_family, @b1.key.to_s, "tags", @sopts)
-      assert_set_equal ["beets", "bears", "battlestar-gallactica"], a.keys
-      # pp a
- 
+      assert_set_equal ["beets", "bears", "battlestar-gallactica"], 
+        Bookmark.connection.get_super_row(Bookmark.associations[:tags].column_family, @b1.key.to_s, "tags", @sopts).keys
+
+      @b1.tags.delete(@battle)
+
+      assert_set_equal ["beets", "bears"], 
+        Bookmark.connection.get_super_row(Bookmark.associations[:tags].column_family, @b1.key.to_s, "tags", @sopts).keys
     end
   end
 

@@ -41,6 +41,19 @@ module CassandraObject
         inverse.set_inverse(record, owner)
       end
     end
+
+    def delete(owner, record, delete_inverse = true, options = {})
+      opts = self.serializers.merge(options)
+      if use_intermediate_key?
+        raise "can't delete #{@association_name} when there's an intermediate key"
+      else
+        opts[:v_serializer] = opts[:n_serializer] # TODO - not sure why
+        connection.delete_super_columns(column_family, {owner.key.to_s => {@association_name => [record.key.to_s]}}, opts)
+      end
+      if has_inverse? && delete_inverse
+        inverse.delete_inverse(record, owner)
+      end
+    end
     
     def new_key
       CassandraObject::Identity::TimeUUIDKeyFactory::UUID.new#.to_s # TODO
@@ -73,6 +86,11 @@ module CassandraObject
     def set_inverse(owner, record)
       add(owner, record, false)
     end
+
+    def delete_inverse(owner, record)
+      delete(owner, record, false)
+    end
+ 
     
     def reversed?
       @options[:reversed] == true
@@ -105,6 +123,10 @@ module CassandraObject
       if loaded?
         @target << record
       end
+    end
+
+    def delete(record)
+      @association.delete(@owner, record)
     end
     
     # Get the targets of this association proxy
